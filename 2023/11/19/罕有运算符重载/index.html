@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+
+
+<html theme="dark" showBanner="true" hasBanner="true" > 
+<link href="https://cdn.staticfile.org/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet">
+<link href="https://cdn.staticfile.org/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet">
+<link href="https://cdn.staticfile.org/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet">
+<script src="/js/color.global.min.js" ></script>
+<script src="/js/load-settings.js" ></script>
+<head>
+  <meta charset="utf-8">
+  
+  
+  
+<!-- Gaug.es Analytics -->
+<script>
+  var _gauges = _gauges || [];
+  (function() {
+    var t   = document.createElement('script');
+    t.async = true;
+    t.id    = 'gauges-tracker';
+    t.setAttribute('data-site-id', 'true');
+    t.setAttribute('data-track-path', 'https://track.gaug.es/track.gif');
+    t.src = 'https://d36ee2fcip1434.cloudfront.net/track.js';
+    var s = document.getElementsByTagName('script')[0];
+    s.parentNode.insertBefore(t, s);
+  })();
+</script>
+<!-- End Gaug.es Analytics -->
+
+
+  
+  <title>为智能指针实现operator-&gt;*的方式 | Code</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <link rel="preload" href="/css/fonts/Roboto-Regular.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+  <link rel="preload" href="/css/fonts/Roboto-Bold.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+
+  <meta name="description" content="当我在1995年撰写《More Effective C++》时，我研究的一个主题是智能指针。因此，我收到了很多关于智能指针的问题，其中最有趣的一个问题来自Andrei Alexandrescu。他问道：“难道一个真正聪明的智能指针不应该重载operator-&gt;*吗？我从来没有见过这样做。”我也从未见过有人这样做，所以我开始着手实现它。我认为结果是有教育意义的，不仅仅是对于operator-&amp;">
+<meta property="og:type" content="article">
+<meta property="og:title" content="为智能指针实现operator-&gt;*的方式">
+<meta property="og:url" content="http://example.com/2023/11/19/%E7%BD%95%E6%9C%89%E8%BF%90%E7%AE%97%E7%AC%A6%E9%87%8D%E8%BD%BD/index.html">
+<meta property="og:site_name" content="Code">
+<meta property="og:description" content="当我在1995年撰写《More Effective C++》时，我研究的一个主题是智能指针。因此，我收到了很多关于智能指针的问题，其中最有趣的一个问题来自Andrei Alexandrescu。他问道：“难道一个真正聪明的智能指针不应该重载operator-&gt;*吗？我从来没有见过这样做。”我也从未见过有人这样做，所以我开始着手实现它。我认为结果是有教育意义的，不仅仅是对于operator-&amp;">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2023-11-19T14:49:58.000Z">
+<meta property="article:modified_time" content="2023-11-20T05:29:58.965Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="运算符重载">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="Code" type="application/atom+xml">
+  
+  
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-32.png" sizes="32x32">
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-128.png" sizes="128x128">
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-180.png" sizes="180x180">
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-192.png" sizes="192x192">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-32.png" sizes="32x32">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-128.png" sizes="128x128">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-180.png" sizes="180x180">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-192.png" sizes="192x192">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body>
+  
+  
+    
+<div id="banner" class="">
+  <img src="https://c-ssl.duitang.com/uploads/blog/202103/16/20210316041943_4bea4.png" itemprop="image">
+  <div id="banner-dim"></div>
+</div>
+ 
+   
+  <div id="main-grid" class="shadow   ">
+    <div id="nav" class=""  >
+      <navbar id="navbar">
+  <nav id="title-nav">
+    <a href="/">
+      <div id="vivia-logo">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+      <div>Code </div>
+    </a>
+  </nav>
+  <nav id="main-nav">
+    
+      <a class="main-nav-link" href="/">主页</a>
+    
+      <a class="main-nav-link" href="/archives">归档</a>
+    
+      <a class="main-nav-link" href="/about">关于</a>
+    
+  </nav>
+  <nav id="sub-nav">
+    <a id="theme-btn" class="nav-icon">
+      <span class="light-mode-icon"><svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M438.5-829.913v-48q0-17.452 11.963-29.476 11.964-12.024 29.326-12.024 17.363 0 29.537 12.024t12.174 29.476v48q0 17.452-11.963 29.476-11.964 12.024-29.326 12.024-17.363 0-29.537-12.024T438.5-829.913Zm0 747.826v-48q0-17.452 11.963-29.476 11.964-12.024 29.326-12.024 17.363 0 29.537 12.024t12.174 29.476v48q0 17.452-11.963 29.476-11.964 12.024-29.326 12.024-17.363 0-29.537-12.024T438.5-82.087ZM877.913-438.5h-48q-17.452 0-29.476-11.963-12.024-11.964-12.024-29.326 0-17.363 12.024-29.537t29.476-12.174h48q17.452 0 29.476 11.963 12.024 11.964 12.024 29.326 0 17.363-12.024 29.537T877.913-438.5Zm-747.826 0h-48q-17.452 0-29.476-11.963-12.024-11.964-12.024-29.326 0-17.363 12.024-29.537T82.087-521.5h48q17.452 0 29.476 11.963 12.024 11.964 12.024 29.326 0 17.363-12.024 29.537T130.087-438.5Zm660.174-290.87-34.239 32q-12.913 12.674-29.565 12.174-16.653-.5-29.327-13.174-12.674-12.673-12.554-28.826.12-16.152 12.794-28.826l33-35q12.913-12.674 30.454-12.674t30.163 12.847q12.709 12.846 12.328 30.826-.38 17.98-13.054 30.653ZM262.63-203.978l-32 34q-12.913 12.674-30.454 12.674t-30.163-12.847q-12.709-12.846-12.328-30.826.38-17.98 13.054-30.653l33.239-31q12.913-12.674 29.565-12.174 16.653.5 29.327 13.174 12.674 12.673 12.554 28.826-.12 16.152-12.794 28.826Zm466.74 33.239-32-33.239q-12.674-12.913-12.174-29.565.5-16.653 13.174-29.327 12.673-12.674 28.826-13.054 16.152-.38 28.826 12.294l35 33q12.674 12.913 12.674 30.454t-12.847 30.163q-12.846 12.709-30.826 12.328-17.98-.38-30.653-13.054ZM203.978-697.37l-34-33q-12.674-12.913-13.174-29.945-.5-17.033 12.174-29.707t31.326-13.293q18.653-.62 31.326 13.054l32 34.239q11.674 12.913 11.174 29.565-.5 16.653-13.174 29.327-12.673 12.674-28.826 12.554-16.152-.12-28.826-12.794ZM480-240q-100 0-170-70t-70-170q0-100 70-170t170-70q100 0 170 70t70 170q0 100-70 170t-170 70Zm-.247-82q65.703 0 111.475-46.272Q637-414.544 637-480.247t-45.525-111.228Q545.95-637 480.247-637t-111.475 45.525Q323-545.95 323-480.247t45.525 111.975Q414.05-322 479.753-322ZM481-481Z"/></svg></span>
+      <span class="dark-mode-icon"><svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M480.239-116.413q-152.63 0-258.228-105.478Q116.413-327.37 116.413-480q0-130.935 77.739-227.435t206.304-125.043q43.022-9.631 63.87 10.869t3.478 62.805q-8.891 22.043-14.315 44.463-5.424 22.42-5.424 46.689 0 91.694 64.326 155.879 64.325 64.186 156.218 64.186 24.369 0 46.978-4.946 22.609-4.945 44.413-14.076 42.826-17.369 62.967 1.142 20.142 18.511 10.511 61.054Q807.174-280 712.63-198.206q-94.543 81.793-232.391 81.793Zm0-95q79.783 0 143.337-40.217 63.554-40.218 95.793-108.283-15.608 4.044-31.097 5.326-15.49 1.283-31.859.805-123.706-4.066-210.777-90.539-87.071-86.473-91.614-212.092-.24-16.369.923-31.978 1.164-15.609 5.446-30.978-67.826 32.478-108.282 96.152Q211.652-559.543 211.652-480q0 111.929 78.329 190.258 78.329 78.329 190.258 78.329ZM466.13-465.891Z"/></svg></span>
+    </a>
+    
+      <a id="nav-rss-link" class="nav-icon mobile-hide" href="/atom.xml" title="RSS 订阅">
+        <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M198-120q-25.846 0-44.23-18.384-18.384-18.385-18.384-44.23 0-25.846 18.384-44.23 18.384-18.385 44.23-18.385 25.846 0 44.23 18.385 18.384 18.384 18.384 44.23 0 25.845-18.384 44.23Q223.846-120 198-120Zm538.385 0q-18.846 0-32.923-13.769-14.076-13.769-15.922-33.23-8.692-100.616-51.077-188.654-42.385-88.039-109.885-155.539-67.5-67.501-155.539-109.885Q283-663.462 182.385-672.154q-19.461-1.846-33.23-16.23-13.769-14.385-13.769-33.846t14.076-32.922q14.077-13.461 32.923-12.23 120.076 8.692 226.038 58.768 105.961 50.077 185.73 129.846 79.769 79.769 129.846 185.731 50.077 105.961 58.769 226.038 1.231 18.846-12.538 32.922Q756.461-120 736.385-120Zm-252 0q-18.231 0-32.423-13.461t-18.653-33.538Q418.155-264.23 348.886-333.5q-69.27-69.27-166.501-84.423-20.077-4.462-33.538-18.961-13.461-14.5-13.461-33.346 0-19.076 13.884-33.23 13.884-14.153 33.115-10.922 136.769 15.384 234.384 112.999 97.615 97.615 112.999 234.384 3.231 19.23-10.538 33.115Q505.461-120 484.385-120Z"/></svg>
+      </a>
+    
+    <div id="nav-menu-btn" class="nav-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M177.37-252.282q-17.453 0-29.477-11.964-12.024-11.963-12.024-29.326t12.024-29.537q12.024-12.174 29.477-12.174h605.26q17.453 0 29.477 11.964 12.024 11.963 12.024 29.326t-12.024 29.537q-12.024 12.174-29.477 12.174H177.37Zm0-186.218q-17.453 0-29.477-11.963-12.024-11.964-12.024-29.326 0-17.363 12.024-29.537T177.37-521.5h605.26q17.453 0 29.477 11.963 12.024 11.964 12.024 29.326 0 17.363-12.024 29.537T782.63-438.5H177.37Zm0-186.217q-17.453 0-29.477-11.964-12.024-11.963-12.024-29.326t12.024-29.537q12.024-12.174 29.477-12.174h605.26q17.453 0 29.477 11.964 12.024 11.963 12.024 29.326t-12.024 29.537q-12.024 12.174-29.477 12.174H177.37Z"/></svg>
+    </div>
+  </nav>
+</navbar>
+<div id="nav-dropdown" class="hidden">
+  <div id="dropdown-link-list">
+    
+      <a class="nav-dropdown-link" href="/">主页</a>
+    
+      <a class="nav-dropdown-link" href="/archives">归档</a>
+    
+      <a class="nav-dropdown-link" href="/about">关于</a>
+    
+    
+      <a class="nav-dropdown-link" href="/atom.xml" title="RSS 订阅">RSS</a>
+     
+    </div>
+</div>
+<script>
+  let dropdownBtn = document.getElementById("nav-menu-btn");
+  let dropdownEle = document.getElementById("nav-dropdown");
+  dropdownBtn.onclick = function() {
+    dropdownEle.classList.toggle("hidden");
+  }
+</script>
+    </div>
+    <div id="sidebar-wrapper">
+      <sidebar id="sidebar">
+  
+    <div class="widget-wrap">
+  <div class="info-card">
+    <div class="avatar">
+      
+        <image src=/avatar/%E7%8C%AB%E7%BE%BD%E9%9B%AB.jpg></image>
+      
+      <div class="img-dim"></div>
+    </div>
+    <div class="info">
+      <div class="username">threeWater </div>
+      <div class="dot"></div>
+      <div class="subtitle">This is the subtitle </div>
+      <div class="link-list">
+        
+          <a class="link-btn" target="_blank" rel="noopener" href="https://en.cppreference.com/w/cpp" title="C++ reference"><i class="fa-solid fa-link"></i></a>
+        
+          <a class="link-btn" target="_blank" rel="noopener" href="https://godbolt.org/" title="Compiler Explorer"><i class="fa-solid fa-code"></i></a>
+        
+          <a class="link-btn" target="_blank" rel="noopener" href="https://github.com" title="GitHub"><i class="fa-brands fa-github"></i></a>
+         
+      </div>  
+    </div>
+  </div>
+</div>
+
+  
+  <div class="sticky">
+    
+      
+
+
+  <div class="widget-wrap">
+    <div class="widget">
+      <h3 class="widget-title">分类</h3>
+      <div class="category-box">
+            <a class="category-link" href="/categories/Cpp/">
+                Cpp
+                <div class="category-count">2</div>
+            </a>
+        </div>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget-wrap">
+    <div class="widget">
+      <h3 class="widget-title">标签</h3>
+      <ul class="widget-tag-list" itemprop="keywords"><li class="widget-tag-list-item"><a class="widget-tag-list-link" href="/tags/%E5%85%A5%E9%97%A8/" rel="tag">入门</a></li><li class="widget-tag-list-item"><a class="widget-tag-list-link" href="/tags/%E8%BF%90%E7%AE%97%E7%AC%A6%E9%87%8D%E8%BD%BD/" rel="tag">运算符重载</a></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget-wrap">
+    <div class="widget">
+      <h3 class="widget-title">归档</h3>
+      
+      
+        <a class="archive-link" href="/archives/2023/11 ">
+          十一月 2023 
+          <div class="archive-count">3 </div>
+        </a>
+      
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget-wrap">
+    <div class="widget">
+      <h3 class="widget-title">最新文章</h3>
+      <ul>
+        
+          <a class="recent-link" href="/2023/11/19/%E7%BD%95%E6%9C%89%E8%BF%90%E7%AE%97%E7%AC%A6%E9%87%8D%E8%BD%BD/" title="为智能指针实现operator->*的方式" >
+            <div class="recent-link-text">
+              为智能指针实现operator-&gt;*的方式
+            </div>
+          </a>
+        
+          <a class="recent-link" href="/2023/11/17/Cpp%E5%85%A5%E9%97%A8/" title="Cpp入门" >
+            <div class="recent-link-text">
+              Cpp入门
+            </div>
+          </a>
+        
+          <a class="recent-link" href="/2023/11/17/hello-world/" title="Hello World" >
+            <div class="recent-link-text">
+              Hello World
+            </div>
+          </a>
+        
+      </ul>
+    </div>
+  </div>
+
+    
+  </div>
+</sidebar>
+    </div>
+    <div id="content-body">
+       
+
+
+<article id="post-罕有运算符重载" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  
+    
+   
+  <div class="article-inner">
+    <div class="article-main">
+      <header class="article-header">
+        
+<div class="main-title-bar">
+  <div class="main-title-dot"></div>
+  
+    
+      <h1 class="p-name article-title" itemprop="headline name">
+        为智能指针实现operator-&gt;*的方式
+      </h1>
+    
+  
+</div>
+
+        <div class='meta-info-bar'>
+          <div class="meta-info">
+  <time class="dt-published" datetime="2023-11-19T14:49:58.000Z" itemprop="datePublished">2023-11-19</time>
+</div>
+          <div class="need-seperator meta-info">
+            <div class="meta-cate-flex">
+  
+  <a class="meta-cate-link" href="/categories/Cpp/">Cpp</a>
+   
+</div>
+  
+          </div>
+          <div class="wordcount need-seperator meta-info">
+            12k 词 
+          </div>
+        </div>
+        
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E8%BF%90%E7%AE%97%E7%AC%A6%E9%87%8D%E8%BD%BD/" rel="tag">运算符重载</a></li></ul>
+
+      </header>
+      <div class="e-content article-entry" itemprop="articleBody">
+        
+          <p>当我在1995年撰写《More Effective C++》时，我研究的一个主题是智能指针。因此，我收到了很多关于智能指针的问题，其中最有趣的一个问题来自Andrei Alexandrescu。他问道：“难道一个真正聪明的智能指针不应该重载<code>operator-&gt;*</code>吗？我从来没有见过这样做。”我也从未见过有人这样做，所以我开始着手实现它。我认为结果是有教育意义的，不仅仅是对于<code>operator-&gt;*</code>；它还涉及到对模板的有趣和有用应用的见解。</p>
+<h2 id="operator-的回顾"><a href="#operator-的回顾" class="headerlink" title="operator-&gt;的回顾"></a><code>operator-&gt;</code>的回顾</h2><p>如果您和大多数程序员一样，不经常使用<code>operator-&gt;*</code>，所以在我解释如何为智能指针实现这个运算符之前，让我花点时间回顾内置版本的行为。</p>
+<p>给定一个类<code>C</code>，一个指向<code>C</code>类无参数成员函数的指针<code>pmf</code>，以及指向<code>C</code>对象的指针<code>pc</code>，表达式</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(pc-&gt;*pmf)(); <span class="comment">// 在 *pc 上调用成员函数 *pmf</span></span><br></pre></td></tr></table></figure>
+<p>调用由<code>pmf</code>指向的成员函数，作用于<code>pc</code>指向的对象。以下是一个示例：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Wombat</span> &#123;  <span class="comment">// 袋熊是可爱的澳大利亚有袋类动物</span></span><br><span class="line"><span class="keyword">public</span>:         <span class="comment">// 看起来像狗</span></span><br><span class="line">    <span class="function"><span class="type">int</span> <span class="title">dig</span><span class="params">()</span></span>;  <span class="comment">// 返回挖掘深度</span></span><br><span class="line">    <span class="function"><span class="type">int</span> <span class="title">sleep</span><span class="params">()</span></span>;<span class="comment">// 返回睡眠时间</span></span><br><span class="line">&#125;;</span><br><span class="line"><span class="function"><span class="keyword">typedef</span> <span class="title">int</span><span class="params">(Wombat::*PWMF)</span><span class="params">()</span></span>;   <span class="comment">// PWMF 是一个指针指向 </span></span><br><span class="line">                                <span class="comment">// Wombat 成员函数</span></span><br><span class="line">Wombat* pw = <span class="keyword">new</span> Wombat;</span><br><span class="line">PWMF pmf = &amp;Wombat::dig;        <span class="comment">// 使 pmf 指向</span></span><br><span class="line">                                <span class="comment">// Wombat::dig</span></span><br><span class="line"></span><br><span class="line">(pw-&gt;*pmf)();                   <span class="comment">// 与 pw-&gt;dig() 相同</span></span><br><span class="line">pmf = &amp;Wombat::sleep;           <span class="comment">// 使 pmf 指向</span></span><br><span class="line">                                <span class="comment">// Wombat::sleep</span></span><br><span class="line"></span><br><span class="line">(pw-&gt;*pmf)();                   <span class="comment">// 与 pw-&gt;sleep() 相同</span></span><br></pre></td></tr></table></figure>
+<p>如您所见，成员函数指针的行为与普通函数指针类似；只是语法稍微复杂一些。顺便说一下，<code>pc-&gt;*pmf</code>周围的括号是必需的，因为编译器会将其</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pc-&gt;*<span class="built_in">pmf</span>();         <span class="comment">// error!</span></span><br></pre></td></tr></table></figure>
+<p>解释为</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pc-&gt;*(<span class="built_in">pmf</span>());       <span class="comment">// error!</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="设计支持operator-的方式"><a href="#设计支持operator-的方式" class="headerlink" title="设计支持operator-&gt;*的方式"></a>设计支持<code>operator-&gt;*</code>的方式</h2><p>像许多运算符一样，<code>operator-&gt;*</code>是二元的：它接受两个参数。在为智能指针实现<code>operator-&gt;*</code>时，左参数是指向T类型对象的智能指针，右参数是T类的成员函数的指针。对于<code>operator-&gt;*</code>调用的结果，唯一能做的就是将其作为函数调用的参数列表传递，因此<code>operator-&gt;*</code>的返回类型必须是可以应用<code>operator()</code>（函数调用运算符）的类型。<code>operator-&gt;*</code>的返回值表示一个待处理的成员函数调用，因此我将从<code>operator-&gt;*</code>返回的对象类型称为<code>PMFC</code>（”Pending Member Function Call”，待处理的成员函数调用）。</p>
+<p>将以上内容结合起来，得到以下伪代码：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">PMFC</span> &#123;        <span class="comment">// &quot;待调用的成员函数&quot;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">return</span> type <span class="built_in">operator</span>()(parameters) <span class="type">const</span>;</span><br><span class="line">    ...</span><br><span class="line">&#125;;</span><br><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;   <span class="comment">// 智能pts-to-T模板</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">SP</span> &#123;              <span class="comment">// 支持操作符-&gt;*</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    ...</span><br><span class="line">    <span class="type">const</span> PMFC <span class="keyword">operator</span>-&gt;*(<span class="keyword">return</span> <span class="built_in">type</span>(T::*pmf)(parameters)) <span class="type">const</span>;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>请注意，由于每个<code>PMFC</code>对象代表对传递给<code>operator-&gt;*</code>的成员函数的一个待处理调用，因此成员函数和<code>PMFC::operator()</code>都需要相同的参数列表。</p>
+<p>为了简化问题，我暂时假设T的成员函数从不接受任何参数。（稍后我会取消这个限制。）这意味着我们可以将上面的伪代码改进如下：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">PMFC</span> &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">return</span> type <span class="built_in">operator</span>()() <span class="type">const</span>;</span><br><span class="line">    ...</span><br><span class="line">&#125;;</span><br><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line"><span class="keyword">class</span> <span class="title class_">SP</span> &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    ...</span><br><span class="line">    <span class="type">const</span> PMFC <span class="keyword">operator</span>-&gt;*(<span class="keyword">return</span> <span class="built_in">type</span> (T::*pmf)()) <span class="type">const</span>;</span><br><span class="line">    ...</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>但是，由<code>pmf</code>指向的成员函数的返回类型是什么呢？它可以是<code>int</code>，也可以是<code>double</code>，还可以是<code>const Wombat＆</code>，甚至可以是任何类型。我们通常用模板来表达这个无限的可能性集合。因此，<code>operator-&gt;*</code>变成了一个成员函数模板。此外，<code>PMFC</code>也变成了一个模板，因为<code>operator-&gt;*</code>的不同实例必须返回不同类型的<code>PMFC</code>对象。（这是因为每个<code>PMFC</code>对象在调用其<code>operator()</code>时必须知道要返回的类型。）</p>
+<p>在模板化之后，我们可以放弃伪码，用C++编写<code>PMFC</code>和<code>SP::operator-&gt;*</code>。以下是结果：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> ReturnType&gt;  <span class="comment">// 待处理的 MBR 功能模板</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">PMFC</span> &#123;                    <span class="comment">// 调用返回类型 ReturnType</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    ...</span><br><span class="line">    <span class="function">ReturnType <span class="title">operator</span><span class="params">()</span><span class="params">()</span> <span class="type">const</span></span>;</span><br><span class="line">    ...</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; </span><br><span class="line"><span class="keyword">class</span> <span class="title class_">SP</span> &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> ReturnType&gt;</span><br><span class="line">    <span class="type">const</span> PMFC&lt;ReturnType&gt;</span><br><span class="line">        <span class="keyword">operator</span>-&gt;*(<span class="built_in">ReturnType</span>(T::*pmf)()) <span class="type">const</span>;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<h2 id="为零参数成员函数实现-operator"><a href="#为零参数成员函数实现-operator" class="headerlink" title="为零参数成员函数实现 operator-&gt;*"></a>为零参数成员函数实现 <code>operator-&gt;*</code></h2><p>现在让我们把注意力集中在<code>PMFC</code>上。<code>PMFC</code>代表一个待处理的成员函数调用，这意味着它需要知道两件事情才能实现它的<code>operator()</code>函数：要调用的成员函数和要在哪个对象上调用该成员函数。在<code>PMFC</code>的构造函数中请求这些参数是合乎逻辑的。此外，一个标准的<code>pair</code>对象似乎是存储它们的合适位置。这表明了以下实现方式：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> ObjectType,      <span class="comment">// 提供成员函数的类</span></span><br><span class="line">          <span class="keyword">typename</span> ReturnType,      <span class="comment">// 成员函数的返回类型</span></span><br><span class="line">          <span class="keyword">typename</span> MemFuncPtrType&gt;  <span class="comment">// 成员函数的完整签名</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">PMFC</span> &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="keyword">typedef</span> std::pair&lt;ObjectType*, MemFuncPtrType&gt; CallInfo;</span><br><span class="line">    <span class="built_in">PMFC</span>(<span class="type">const</span> CallInfo&amp; info) : <span class="built_in">callInfo</span>(info) &#123; &#125;</span><br><span class="line">    <span class="function">ReturnType <span class="title">operator</span><span class="params">()</span><span class="params">()</span> <span class="type">const</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> (callInfo.first-&gt;*callInfo.second)();</span><br><span class="line">    &#125;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    CallInfo callInfo;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>虽然乍一看可能并不简单，但实际上很简单。当您创建一个<code>PMFC</code>时，您指定要调用哪个成员函数以及在哪个对象上调用它。当您稍后调用<code>PMFC</code>的<code>operator()</code>函数时，它只是在保存的对象上调用保存的成员函数。</p>
+<p>请注意，<code>operator()</code>是根据内置的<code>operator-&gt;*</code>实现的。因为<code>PMFC</code>对象只有在调用智能指针的用户定义<code>operator-&gt;*</code>时才会被创建，这意味着用户定义的<code>operator-&gt;*</code>是根据内置的<code>operator-&gt;*</code>实现的。这与用户定义的<code>operator-&gt;</code>的行为相对于内置的<code>operator-&gt;</code>的行为形成了很好的对称性，因为在C++中，对用户定义的operator-&gt;的每次调用最终都会以对内置的<code>operator-&gt;</code>的（隐式）调用结束。这种对称性令人放心。它表明我们的设计是正确的。</p>
+<p>您可能已经注意到，模板参数<code>ObjectType</code>、<code>ReturnType</code>和<code>MemFuncPtrType</code>有些多余。鉴于<code>MemFuncPtrType</code>，应该可以推断出<code>ObjectType</code>和<code>ReturnType</code>。毕竟，<code>ObjectType</code>和<code>ReturnType</code>都是<code>MemFuncPtrType</code>的一部分。可以使用部分模板特化从<code>MemFuncPtrType</code>中推断出<code>ObjectType</code>和<code>ReturnType</code>，但是由于商业编译器中对部分特化的支持还不够普遍，我选择不在本文中使用该方法。有关基于部分特化的设计信息，请参阅附带的边栏。</p>
+<p>鉴于上述对PMFC的实现，<code>SP&lt;T&gt;</code>的<code>operator-&gt;*</code>几乎是自己编写的。它返回的<code>PMFC</code>对象需要一个对象指针和一个成员函数指针。智能指针通常存储对象指针，而必要的成员函数指针就是传递给<code>operator-&gt;*</code>的参数。因此：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line"><span class="keyword">class</span> <span class="title class_">SP</span> &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="built_in">SP</span>(T* p) : <span class="built_in">ptr</span>(p) &#123; &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> ReturnType&gt;</span><br><span class="line">    <span class="type">const</span> PMF&lt;T, ReturnType, <span class="built_in">ReturnType</span>(T::*)()&gt;</span><br><span class="line">        <span class="keyword">operator</span>-&gt;*(<span class="built_in">ReturnType</span>(T::*pmf)()) <span class="type">const</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> std::<span class="built_in">make_pair</span>(ptr, pmf);</span><br><span class="line">        &#125;</span><br><span class="line">    ...</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    T* ptr;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>这意味着以下代码应该能够工作，在我测试过的编译器（如Visual C++ 6和egcs 1.1.2）中也确实可以:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;utility&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> ObjectType,</span><br><span class="line">          <span class="keyword">typename</span> ReturnType,</span><br><span class="line">          <span class="keyword">typename</span> MemFuncPtrType&gt;</span><br><span class="line"><span class="keyword">class</span> <span class="title class_">PMF</span> &#123; ... &#125;;      <span class="comment">// 同上</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;   <span class="comment">// 亦同上</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">SP</span> &#123; ... &#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Wombat</span> &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="type">int</span> <span class="title">dig</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        std::cout &lt;&lt; <span class="string">&quot;Digging...&quot;</span> &lt;&lt; <span class="string">&#x27;\n&#x27;</span>;</span><br><span class="line">        <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="type">int</span> <span class="title">sleep</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        std::cout &lt;&lt; <span class="string">&quot;Sleeping...&quot;</span> &lt;&lt; <span class="string">&#x27;\n&#x27;</span>;</span><br><span class="line">        <span class="keyword">return</span> <span class="number">5</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">typedef</span> <span class="title">int</span> <span class="params">(Wombat::*PWMF)</span><span class="params">()</span></span>;  <span class="comment">// 如前所述，PWMF 是一个</span></span><br><span class="line">                                    <span class="comment">// 指针指向一个Wombat</span></span><br><span class="line">                                    <span class="comment">// 成员函数</span></span><br><span class="line">    SP&lt;Wombat&gt; pw = <span class="keyword">new</span> Wombat;</span><br><span class="line">    PWMF pmf = &amp;Wombat::dig;        <span class="comment">// 让pmf指向</span></span><br><span class="line">                                    <span class="comment">// Wombat::dig</span></span><br><span class="line">    (pw-&gt;*pmf)();                   <span class="comment">// 调用我们的运算符-&gt;*:</span></span><br><span class="line">                                    <span class="comment">// 打印&quot;Digging...&quot;</span></span><br><span class="line">    pmf = &amp;Wombat::sleep;           <span class="comment">// 让pmf指向</span></span><br><span class="line">                                    <span class="comment">// Wombat::sleep</span></span><br><span class="line">    (pw-&gt;*pmf)();                   <span class="comment">// 调用我们的运算符-&gt;*:</span></span><br><span class="line">                                    <span class="comment">// 打印&quot;Sleeping...&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>是的，我知道，这段代码存在资源泄漏（<code>new</code>出来的<code>Wombat</code>从未被<code>delete</code>），而且在使用声明时却使用了<code>using</code>指令(这里没有使用”using namespace std;”)，但请试着专注于<code>SP::operator-&gt;*</code>和<code>PMFC</code>的交互，而不是这些相对细枝末节。如果您理解为什么语句<code>(pw-&gt;*pmf)()</code>会产生这样的行为，毫无疑问您可以轻松地修复这个示例的风格缺陷。顺便说一下，因为<code>operator-&gt;*</code>成员函数和所有的<code>PMFC</code>成员函数都是（隐式地）内联的，我们可以希望生成的代码为这个语句 </p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(pw-&gt;*pmf)();</span><br></pre></td></tr></table></figure>
+<p>使用<code>SP</code>和<code>PMFC</code>将生成与等效代码相同的结果</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(pw.ptr-&gt;*pmf)();</span><br></pre></td></tr></table></figure>
+<p>它仅使用内置操作。因此，使用<code>SP</code>重载的<code>operator-&gt;*</code>和<code>PMFC</code>重载的<code>operator()</code>的运行时成本可能为零：零额外的字节代码，零额外的数据字节。当然，实际成本取决于您的编译器的优化能力以及您的标准库对<code>pair</code>和<code>make_pair</code>的实现。在我测试过的两个编译器（及其关联的库）中，启用了完全优化后，一个产生了零运行时成本的<code>operator-&gt;*</code>实现，而另一个没有。</p>
+<h2 id="添加对-const-成员函数的支持"><a href="#添加对-const-成员函数的支持" class="headerlink" title="添加对 const 成员函数的支持"></a>添加对 <code>const</code> 成员函数的支持</h2><p>仔细看一下<code>SP&lt;T&gt;</code>的operator-&gt;*函数所接受的形式参数：它是<code>ReturnType (T::*pmf)()</code>。更具体地说，它不是<code>ReturnType (T::pmf)() const</code>。这意味着不能将指向<code>const</code>成员函数的指针传递给<code>operator-&gt;*</code>，也就是说，<code>operator-&gt;*</code>无法支持<code>const</code>成员函数。这种明显的<code>const</code>歧视在一个设计良好的软件系统中是没有位置的。幸运的是，很容易消除这个问题。只需在<code>SP</code>中添加第二个<code>operator-&gt;*</code>模板，设计用于处理指向<code>const</code>成员函数的指针：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line"><span class="keyword">class</span> <span class="title class_">SP</span> &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    ...                     <span class="comment">// 同上</span></span><br><span class="line">    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> ReturnType&gt;</span><br><span class="line">    <span class="type">const</span> PMFC&lt;T, ReturnType, <span class="built_in">ReturnType</span>(T::*)() <span class="type">const</span>&gt; <span class="comment">// 添加const</span></span><br><span class="line">        <span class="keyword">operator</span>-&gt;*(<span class="built_in">ReturnType</span>(T::*pmf)() <span class="type">const</span>) <span class="type">const</span> &#123; <span class="comment">// 添加const</span></span><br><span class="line">            <span class="keyword">return</span> std::<span class="built_in">make_pair</span>(ptr, pmf);</span><br><span class="line">        &#125;</span><br><span class="line">    ...                     <span class="comment">// 同上</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>有趣的是，在<code>PMFC</code>中没有必要进行任何更改。其类型参数<code>MemFuncPtrType</code>将绑定到任何类型的成员函数指针，无论该函数是否为<code>const</code>。</p>
+<h2 id="添加对接受参数的成员函数的支持"><a href="#添加对接受参数的成员函数的支持" class="headerlink" title="添加对接受参数的成员函数的支持"></a>添加对接受参数的成员函数的支持</h2><p>在完成零参数的情况后，让我们继续支持接受一个参数的成员函数指针。这个步骤非常简单，因为我们只需要修改<code>operator-&gt;*</code>接受的成员指针参数的类型，然后通过<code>PMFC</code>传播这个变化。实际上，我们所需要做的就是在<code>operator-&gt;*</code>中添加一个新的模板参数（用于指向的成员函数所接受的参数的类型），然后更新其他相关内容以保持一致。此外，由于<code>SP&lt;T&gt;</code>应该支持既接受零参数的成员函数，也接受一个参数的成员函数，我们在现有的<code>operator-&gt;*</code>模板中添加了一个新的模板。在下面的代码中，我只展示了对非<code>const</code>成员函数的支持，但是对于<code>const</code>成员函数的<code>operator-&gt;*</code>模板也应该可用。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> ObjectType,</span><br><span class="line">          <span class="keyword">typename</span> ReturnType,</span><br><span class="line">          <span class="keyword">typename</span> MemFuncPtrType&gt;</span><br><span class="line"><span class="keyword">class</span> <span class="title class_">PMFC</span> &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="keyword">typedef</span> std::pair&lt;ObjectType*, MemFuncPtrType&gt; CallInfo;</span><br><span class="line">    <span class="built_in">PMFC</span>(<span class="type">const</span> CallInfo&amp; info) : <span class="built_in">callInfo</span>(info) &#123; &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 支持 0 个参数</span></span><br><span class="line">    <span class="function">ReturnType <span class="title">operator</span><span class="params">()</span><span class="params">()</span> <span class="type">const</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> (callInfo.first-.*callInfo.second)();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 支持 1 个参数</span></span><br><span class="line">    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> Param1Type&gt;</span><br><span class="line">    <span class="function">ReturnType <span class="title">operator</span><span class="params">()</span><span class="params">(Param1Type)</span> <span class="type">const</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> (callInfo.first-&gt;*callInfo.second)(p1);</span><br><span class="line">    &#125;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    CallInfo callInfo;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line"><span class="keyword">class</span> <span class="title class_">SP</span> &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="built_in">SP</span>(T* p) : <span class="built_in">ptr</span>(P) &#123; &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 支持 0 个参数</span></span><br><span class="line">    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> ReturnType&gt;</span><br><span class="line">    <span class="type">const</span> PMFC&lt;T, ReturnType, <span class="built_in">ReturnType</span>(T::*)()&gt;</span><br><span class="line">        <span class="keyword">operator</span>-&gt;*(<span class="built_in">ReturnType</span>(T::*pmf)()) <span class="type">const</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> std::<span class="built_in">make_pair</span>(ptr, pmf);</span><br><span class="line">        &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 支持 1 个参数</span></span><br><span class="line">    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> ReturnType,</span><br><span class="line">              <span class="keyword">typename</span> Param1Type&gt;</span><br><span class="line">    <span class="type">const</span> PMFC&lt;T, ReturnType, <span class="built_in">ReturnType</span>(T::*)(Param1Type)&gt;</span><br><span class="line">        <span class="keyword">operator</span>-&gt;*(<span class="built_in">Return</span>(T::*pmf)(Param1Type)) <span class="type">const</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> std::<span class="built_in">make_pair</span>(ptr, pmf);</span><br><span class="line">        &#125;</span><br><span class="line">    ...</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    T* ptr;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>一旦你掌握了对0个和1个参数的支持，就可以很容易地添加对任意数量参数的支持。为了支持接受n个参数的成员函数，在<code>SP</code>中声明两个成员模板<code>operator-&gt;*</code>，一个用于支持非<code>const</code>成员函数，一个用于支持<code>const</code>成员函数。每个<code>operator-&gt;*</code>模板应该接受n+1个类型参数，n个用于参数，一个用于返回类型。在<code>PMFC</code>中添加相应的<code>operator()</code>模板，然后就完成了。你可以在DDJ网站上找到支持最多两个参数的<code>operator-&gt;*</code>的源代码（支持<code>const</code>和非<code>const</code>成员函数）</p>
+<h2 id="封装对operator-的支持"><a href="#封装对operator-的支持" class="headerlink" title="封装对operator-&gt;*的支持"></a>封装对<code>operator-&gt;*</code>的支持</h2><p>许多应用程序有几种智能指针的变体，如果需要为每种智能指针都重复前述的工作将会很不方便。幸运的是，<code>operator-&gt;*</code>的支持可以以基类的形式进行封装。</p>
+<blockquote>
+<p>要了解可以想象到的不同类型的智能指针（以及一些令人兴奋的C++代码示例），请访问Kevin S. Van Horn的网站 <a target="_blank" rel="noopener" href="http://www.xmission.com/~ksvhsoft/code/smart_ptrs.html">http://www.xmission.com/~ksvhsoft/code/smart_ptrs.html</a></p>
+</blockquote>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;   <span class="comment">// 智能指针的基类希望</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">SmartPtrBase</span> &#123;    <span class="comment">// 支持operator-&gt;*</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="built_in">SmartPtrBase</span>(T&amp; initVal) : <span class="built_in">ptr</span>(initVal) &#123; &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 支持 0 参数</span></span><br><span class="line">    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> ReturnType&gt;</span><br><span class="line">    <span class="type">const</span> PMFC&lt;T, ReturnType, <span class="built_in">Returntype</span>(T::*)()&gt;</span><br><span class="line">        <span class="keyword">operator</span>-&gt;*(<span class="built_in">ReturnType</span>(T::*pmf)()) <span class="type">const</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> std::<span class="built_in">make_pair</span>(ptr, pmf);</span><br><span class="line">        &#125;</span><br><span class="line">    <span class="comment">// 支持 1 参数</span></span><br><span class="line">    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> ReturnType,</span><br><span class="line">              <span class="keyword">typename</span> Param1Type&gt;</span><br><span class="line">    <span class="type">const</span> PMFC&lt;T, ReturnType, <span class="built_in">ReturnType</span>(T::*)(Param1Type)&gt;</span><br><span class="line">        <span class="keyword">operator</span>-&gt;*(<span class="built_in">ReturnType</span>(T::*pmf)(Param1Type)) <span class="type">const</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> std::<span class="built_in">make_pair</span>(ptr, pmf);</span><br><span class="line">        &#125;</span><br><span class="line">    ...</span><br><span class="line"><span class="keyword">protected</span>:</span><br><span class="line">    T* ptr;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>希望提供<code>operator-&gt;*</code>功能的智能指针可以直接从<code>SmartPtrBase</code>继承。然而，最好使用私有继承，因为公有继承会暗示需要向<code>SmartPtrBase</code>添加虚析构函数，从而增加其大小（以及所有派生类的大小）。私有继承避免了这种大小开销，尽管它要求使用using声明将私有继承的<code>operator-&gt;*</code>模板变为公有的:</p>
+<blockquote>
+<p>这个设计仅适用于包含普通指针以实际指向对象的智能指针。这是最常见的智能指针设计，但也有其他选择。这些替代设计可能需要以不同于此处描述的方式封装<code>operator-&gt;*</code>功能。</p>
+</blockquote>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line"><span class="keyword">class</span> <span class="title class_">SP</span> : <span class="keyword">private</span> SmartPtrBase&lt;T&gt; &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="built_in">SP</span>(T* p) : <span class="built_in">SmartPtrBase</span>&lt;T&gt;(p) &#123; &#125;</span><br><span class="line">    <span class="keyword">using</span> SmartPtrBase&lt;T&gt;::<span class="keyword">operator</span>-&gt;*; <span class="comment">// 将私有继承的</span></span><br><span class="line">                                        <span class="comment">// operator-&gt;*模板变为公有的</span></span><br><span class="line">    <span class="comment">// 通智能指针函数将放在这里；operator-&gt;*</span></span><br><span class="line">    <span class="comment">// 功能是继承而来的</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>为了更好地封装，可以将<code>SmartPtrBase</code>和<code>PMFC</code>模板放置在一个命名空间中。</p>
+<h2 id="未尽之处"><a href="#未尽之处" class="headerlink" title="未尽之处"></a>未尽之处</h2><p>在我开发这种实现智能指针的<code>operator-&gt;*</code>的方法后，我将我的解决方案发布到了Usenet新闻组<code>comp.lang.c++.moderated</code>，以了解我是否有所忽视。不久之后，Esa Pulkkinen提出了以下观察：</p>
+<p>你的方法至少存在两个问题：</p>
+<ol>
+<li><p>你不能使用指向数据成员的指针（尽管这很容易解决）。</p>
+</li>
+<li><p>你不能使用用户定义的指向成员的指针。如果有人重载了<code>operator-&gt;*</code>以接受像成员指针一样的对象，你可能希望在你的智能指针类中支持这种“智能指针到成员”的功能。不幸的是，你需要使用特性类来获取这种重载的<code>operator-&gt;*</code>的结果类型。</p>
+</li>
+</ol>
+<p>智能指针到成员！天哪！Esa说得对。幸运的是，本文已经足够长了，我可以在此停下来，将解决Esa观察到的问题的方法留给读者自行思考和实践。所以，我就这样做。</p>
+<blockquote>
+<p>他比我最初意识到的还要正确。在撰写本文初稿后不久，我的一位咨询客户向我展示了一个自然由智能指针到成员解决的问题。我也感到惊讶。</p>
+</blockquote>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>如果你的目标是尽可能使你的智能指针在行为上与内置指针兼容，那么你应该像内置指针一样支持<code>operator-&gt;*</code>。使用类和成员模板使得实现这种支持变得容易，而将实现封装为一个基类的形式则有助于其他智能指针作者重用它。</p>
+<h2 id="致谢"><a href="#致谢" class="headerlink" title="致谢"></a>致谢</h2><p>除了激发我对<code>operator-&gt;*</code>的兴趣之外，安德烈·亚历山德雷斯库还帮助我简化了我对<code>PMFC</code>的实现。安德烈还对本文早期草稿和相关的源代码提供了富有见地的评论，同样，Esa Pulkkinen 和 Mark Rodgers 也做出了宝贵的贡献。我对他们每个人在撰写本文方面所给予的大力帮助深表感激。</p>
+<h2 id="关于作者"><a href="#关于作者" class="headerlink" title="关于作者"></a>关于作者</h2><p>Scott Meyers是一位在C++软件开发领域享有国际声誉的作家和顾问。他在1998年大部分时间都在致力于《Effective C++ CD》，这是他畅销书《Effective C++》和《More Effective C++》的创新HTML版本。您可以在他的主页 <a target="_blank" rel="noopener" href="http://www.aristeia.com/">http://www.aristeia.com/</a> 上了解更多关于Scott的信息。</p>
+<h2 id="部分模板特化和operator-【侧边栏】"><a href="#部分模板特化和operator-【侧边栏】" class="headerlink" title="部分模板特化和operator-&gt;* 【侧边栏】"></a>部分模板特化和<code>operator-&gt;*</code> 【侧边栏】</h2><p>在我撰写本文的过程中，Esa Pulkkinen和Mark Rodgers指出，可以利用部分模板特化来从指向该成员函数的指针类型中提取对象和返回类型。只需简单地应用traits技术（这是标准C++库中广泛使用的一种技术）。</p>
+<blockquote>
+<p>请参阅Nathan Myers的文章《特性：一种新颖且有用的模板技术》，该文章最初发表于1995年6月的C++报告，现在可以在 <a target="_blank" rel="noopener" href="http://www.cantrip.org/traits.html">http://www.cantrip.org/traits.html</a> 上找到。</p>
+</blockquote>
+<p>Mark Rodgers建议对于接受零个或一个参数的成员函数使用以下实现（对于更多参数的情况，扩展也是直接的）</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;               <span class="comment">// 特性类</span></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">MemFuncTraits</span> &#123; &#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> R, <span class="keyword">typename</span> O&gt;   <span class="comment">// 部分特化</span></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">MemFuncTraits</span>&lt;<span class="built_in">R</span> (O::*)()&gt; &#123;  <span class="comment">// 对于接受0参数的情况</span></span><br><span class="line">    <span class="keyword">typedef</span> R ReturnType;           <span class="comment">// 非const成员</span></span><br><span class="line">    <span class="keyword">typedef</span> O ObjectType;           <span class="comment">// 函数</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> R, <span class="keyword">typename</span> O&gt;   <span class="comment">// 部分特化</span></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">MemFuncTraits</span>&lt;<span class="built_in">R</span> (O::*)() <span class="type">const</span>&gt; &#123; <span class="comment">// 对于接受0参数的情况</span></span><br><span class="line">    <span class="keyword">typedef</span> R ReturnType;           <span class="comment">// const成员</span></span><br><span class="line">    <span class="keyword">typedef</span> O ObjectType;           <span class="comment">// 函数</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> R, <span class="keyword">typename</span> O, <span class="keyword">typename</span> P1&gt;  <span class="comment">// 部分特化</span></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">MemFuncTraits</span>&lt;<span class="built_in">R</span> (O::*)(P1)&gt; &#123;    <span class="comment">// 对于接受1参数的情况</span></span><br><span class="line">    <span class="keyword">typedef</span> R ReturnType;           <span class="comment">// 非const成员</span></span><br><span class="line">    <span class="keyword">typedef</span> O ObjectType;           <span class="comment">// 函数</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> R, <span class="keyword">typename</span> O, <span class="keyword">typename</span> P1&gt;  <span class="comment">// 部分特化</span></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">MemFuncTraits</span>&lt;<span class="built_in">R</span> (O::*)(P1) <span class="type">const</span>&gt; &#123;  <span class="comment">// 对于接受1参数的情况</span></span><br><span class="line">    <span class="keyword">typedef</span> R ReturnType;           <span class="comment">// const成员</span></span><br><span class="line">    <span class="keyword">typedef</span> O ObjectType;           <span class="comment">// 函数</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>鉴于这些模板，<code>PMFC</code>可以简化为只接受一个类型参数，即<code>MemFuncPtrType</code>。这是因为另外两个类型参数——<code>ObjectType</code>和<code>ReturnType</code>——可以从<code>MemFuncPtrType</code>中推导出来:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ObjectType is MemFuncTraits&lt;MemFuncPtrType&gt;::ObjectTyp</span><br><span class="line"></span><br><span class="line">ReturnType is MemFuncTraits&lt;MemFuncPtrType&gt;::ReturnType</span><br></pre></td></tr></table></figure>
+<p>这就导致了这次修订后的 <code>PMFC</code> 实施方案：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> MemFuncType&gt;</span><br><span class="line"><span class="keyword">class</span> <span class="title class_">PMFC</span> &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="keyword">typedef</span> <span class="keyword">typename</span> MemFuncTraits&lt;MemFuncPtrType&gt;::ObjectType ObjectType;</span><br><span class="line">    <span class="keyword">typedef</span> <span class="keyword">typename</span> MemFuncTraits&lt;MemFuncPtrType&gt;::ReturnType ReturnType;</span><br><span class="line">    ...         <span class="comment">// 与之前一样</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>除了展示我们对traits的了解以及在模板中必须在类型名称之前使用<code>typename</code>的机会之外，这似乎并没有为我们带来太多好处，但不要被欺骗；这极大地减少了智能指针类必须执行的工作，以实现<code>operator-&gt;*</code>。事实上，Mark Rodgers指出，单个<code>operator-&gt;*</code>模板可以支持所有可能的成员函数指针，无论成员函数接受的参数数量如何，以及成员函数是否为<code>const</code>。只需用这个模板替换<code>SP</code>（或<code>SmartPtrBase</code>）中的所有<code>operator-&gt;*</code>模板:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> MemFuncPtrType&gt;</span><br><span class="line"><span class="type">const</span> PMFC&lt;MemFuncPtrType&gt;</span><br><span class="line">    <span class="keyword">operator</span>-&gt;*(MemFuncPtrType pmf) <span class="type">const</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> std::<span class="built_in">make_pair</span>(ptr, pmf);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>类型参数<code>MemFuncPtrType</code>将绑定到任何成员函数指针类型，无论参数、返回类型和<code>const</code>属性如何。然后它将传递该类型到<code>PMFC</code>，部分特化将被用来解析这个类型。</p>
+<p>您可以在DDJ网站上找到应用这种方法实现<code>operator-&gt;*</code>的源代码</p>
+
+        
+      </div>
+
+         
+    </div>
+    
+     
+  </div>
+  
+    
+<nav id="article-nav">
+  <a class="article-nav-btn left  disabled "
+     >
+    <i class="fa-solid fa-angle-left"></i>
+    <p class="title-text">
+        
+    </p>
+  </a>
+  <a class="article-nav-btn right "
+    
+      href="/2023/11/17/Cpp%E5%85%A5%E9%97%A8/"
+      title="Cpp入门"
+     >
+
+    <p class="title-text">
+      
+        Cpp入门
+        
+    </p>
+    <i class="fa-solid fa-angle-right"></i>
+  </a>
+</nav>
+
+
+  
+</article>
+
+
+
+
+    </div>
+    <div id="footer-wrapper">
+      <footer id="footer">
+  
+  <div id="footer-info" class="inner">
+    
+    &copy; 2023 threeWater<br>
+    Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> & Theme <a target="_blank" rel="noopener" href="https://github.com/saicaca/hexo-theme-vivia">Vivia</a>
+  </div>
+</footer>
+
+    </div>
+    <div class="back-to-top-wrapper">
+    <button id="back-to-top-btn" class="back-to-top-btn hide" onclick="topFunction()">
+        <i class="fa-solid fa-angle-up"></i>
+    </button>
+</div>
+
+<script>
+    function topFunction() {
+        window.scroll({ top: 0, behavior: 'smooth' });
+    }
+    let btn = document.getElementById('back-to-top-btn');
+    function scrollFunction() {
+        if (document.body.scrollTop > 600 || document.documentElement.scrollTop > 600) {
+            btn.classList.remove('hide')
+        } else {
+            btn.classList.add('hide')
+        }
+    }
+    window.onscroll = function() {
+        scrollFunction();
+    }
+</script>
+
+  </div>
+  <script src="/js/light-dark-switch.js"></script>
+</body>
+</html>
