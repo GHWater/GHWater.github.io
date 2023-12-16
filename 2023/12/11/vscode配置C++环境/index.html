@@ -36,12 +36,12 @@
   <link rel="preload" href="/css/fonts/Roboto-Regular.ttf" as="font" type="font/ttf" crossorigin="anonymous">
   <link rel="preload" href="/css/fonts/Roboto-Bold.ttf" as="font" type="font/ttf" crossorigin="anonymous">
 
-  <meta name="description" content="一、准备安装工作 1、安装VSCode 2、安装插件 (1) 安装语言插件 (2) 安装C&#x2F;C++智能提示插件   3、安装编译器 (1) 下载WinLibs压缩包        Visual Studio Code (以下简称VSCode) 是一个轻量级但功能强大的源代码编辑器，可以在桌面上运行，适用于Windows、macOS和Linux。它内置了对JavaScript, Ty">
+  <meta name="description" content="一、准备安装工作 1、安装VSCode 2、安装插件 (1) 安装语言插件 (2) 安装C&#x2F;C++智能提示插件   3、安装编译器 (1) 下载WinLibs压缩包 (2) 配置环境变量 (3) 验证环境变量是否配置成功     二、使用VSCode运行调试C&#x2F;C++以及简单配置 1、开始运行C&#x2F;C++ (1) 点击f8按钮编译运行程序 (2) 点击右上角的三角">
 <meta property="og:type" content="article">
 <meta property="og:title" content="VSCode配置C++环境(小白)">
 <meta property="og:url" content="http://example.com/2023/12/11/vscode%E9%85%8D%E7%BD%AEC++%E7%8E%AF%E5%A2%83/index.html">
 <meta property="og:site_name" content="Code">
-<meta property="og:description" content="一、准备安装工作 1、安装VSCode 2、安装插件 (1) 安装语言插件 (2) 安装C&#x2F;C++智能提示插件   3、安装编译器 (1) 下载WinLibs压缩包        Visual Studio Code (以下简称VSCode) 是一个轻量级但功能强大的源代码编辑器，可以在桌面上运行，适用于Windows、macOS和Linux。它内置了对JavaScript, Ty">
+<meta property="og:description" content="一、准备安装工作 1、安装VSCode 2、安装插件 (1) 安装语言插件 (2) 安装C&#x2F;C++智能提示插件   3、安装编译器 (1) 下载WinLibs压缩包 (2) 配置环境变量 (3) 验证环境变量是否配置成功     二、使用VSCode运行调试C&#x2F;C++以及简单配置 1、开始运行C&#x2F;C++ (1) 点击f8按钮编译运行程序 (2) 点击右上角的三角">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/2023/12/11/vscode%E9%85%8D%E7%BD%AEC++%E7%8E%AF%E5%A2%83/image1.png">
 <meta property="og:image" content="http://example.com/2023/12/11/vscode%E9%85%8D%E7%BD%AEC++%E7%8E%AF%E5%A2%83/image2.png">
@@ -51,8 +51,27 @@
 <meta property="og:image" content="http://example.com/2023/12/11/vscode%E9%85%8D%E7%BD%AEC++%E7%8E%AF%E5%A2%83/image6.png">
 <meta property="og:image" content="http://example.com/2023/12/11/vscode%E9%85%8D%E7%BD%AEC++%E7%8E%AF%E5%A2%83/image7.png">
 <meta property="og:image" content="http://example.com/2023/12/11/vscode%E9%85%8D%E7%BD%AEC++%E7%8E%AF%E5%A2%83/image8.png">
+<meta property="og:image" content="http://example.com/2023/12/11/vscode%E9%85%8D%E7%BD%AEC++%E7%8E%AF%E5%A2%83/image9.png">
+<meta property="og:image" content="http://example.com/2023/12/11/vscode%E9%85%8D%E7%BD%AEC++%E7%8E%AF%E5%A2%83/image11.png">
+<meta property="og:image" content="http://example.com/2023/12/11/vscode%E9%85%8D%E7%BD%AEC++%E7%8E%AF%E5%A2%83/image10.png">
+<meta property="og:image" content="http://example.com/2023/12/11/vscode%E9%85%8D%E7%BD%AEC++%E7%8E%AF%E5%A2%83/image12.png">
+<meta property="og:image" content="http://example.com/2023/12/11/vscode%E9%85%8D%E7%BD%AEC++%E7%8E%AF%E5%A2%83/image13.png">
+<meta property="og:image" content="http://example.com/2023/12/11/vscode%E9%85%8D%E7%BD%AEC++%E7%8E%AF%E5%A2%83/image14.png">
+<meta property="og:image" content="http://example.com/2023/12/11/vscode%E9%85%8D%E7%BD%AEC++%E7%8E%AF%E5%A2%83/image15.png">
+<meta property="og:image" content="http://example.com/2023/12/11/vscode%E9%85%8D%E7%BD%AEC++%E7%8E%AF%E5%A2%83/image16.png">
+<meta property="og:image" content="http://example.com/2023/12/11/vscode%E9%85%8D%E7%BD%AEC++%E7%8E%AF%E5%A2%83/image17.png">
+<meta property="og:image" content="http://example.com/2023/12/11/vscode%E9%85%8D%E7%BD%AEC++%E7%8E%AF%E5%A2%83/image18.png">
+<meta property="og:image" content="http://example.com/2023/12/11/vscode%E9%85%8D%E7%BD%AEC++%E7%8E%AF%E5%A2%83/image19.png">
+<meta property="og:image" content="http://example.com/2023/12/11/vscode%E9%85%8D%E7%BD%AEC++%E7%8E%AF%E5%A2%83/image20.png">
+<meta property="og:image" content="http://example.com/2023/12/11/vscode%E9%85%8D%E7%BD%AEC++%E7%8E%AF%E5%A2%83/image21.png">
+<meta property="og:image" content="http://example.com/2023/12/11/vscode%E9%85%8D%E7%BD%AEC++%E7%8E%AF%E5%A2%83/image22.png">
+<meta property="og:image" content="http://example.com/2023/12/11/vscode%E9%85%8D%E7%BD%AEC++%E7%8E%AF%E5%A2%83/image23.png">
+<meta property="og:image" content="http://example.com/2023/12/11/vscode%E9%85%8D%E7%BD%AEC++%E7%8E%AF%E5%A2%83/image26.png">
+<meta property="og:image" content="http://example.com/2023/12/11/vscode%E9%85%8D%E7%BD%AEC++%E7%8E%AF%E5%A2%83/image27.png">
+<meta property="og:image" content="http://example.com/2023/12/11/vscode%E9%85%8D%E7%BD%AEC++%E7%8E%AF%E5%A2%83/image24.png">
+<meta property="og:image" content="http://example.com/2023/12/11/vscode%E9%85%8D%E7%BD%AEC++%E7%8E%AF%E5%A2%83/image25.png">
 <meta property="article:published_time" content="2023-12-11T10:02:35.000Z">
-<meta property="article:modified_time" content="2023-12-15T14:01:41.299Z">
+<meta property="article:modified_time" content="2023-12-16T15:29:56.977Z">
 <meta property="article:author" content="John Doe">
 <meta property="article:tag" content="环境配置">
 <meta name="twitter:card" content="summary">
@@ -183,6 +202,16 @@
     <div class="widget">
       <h3 class="widget-title">分类</h3>
       <div class="category-box">
+            <a class="category-link" href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">
+                设计模式
+                <div class="category-count">1</div>
+            </a>
+        
+            <a class="category-link" href="/categories/C/">
+                C++
+                <div class="category-count">2</div>
+            </a>
+        
             <a class="category-link" href="/categories/VSCode/">
                 VSCode
                 <div class="category-count">1</div>
@@ -192,17 +221,7 @@
                 C/C++
                 <div class="category-count">1</div>
             </a>
-        </div></div>
-            <a class="category-link" href="/categories/C/">
-                C++
-                <div class="category-count">2</div>
-            </a>
-        
-            <a class="category-link" href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">
-                设计模式
-                <div class="category-count">1</div>
-            </a>
-        </div>
+        </div></div></div>
     </div>
   </div>
 
@@ -319,7 +338,7 @@
   
           </div>
           <div class="wordcount need-seperator meta-info">
-            1.4k 词 
+            2.7k 词 
           </div>
         </div>
         
@@ -340,6 +359,21 @@
 </li>
 <li><a href="#3-%E5%AE%89%E8%A3%85%E7%BC%96%E8%AF%91%E5%99%A8">3、安装编译器</a><ul>
 <li><a href="#1-%E4%B8%8B%E8%BD%BDwinlibs%E5%8E%8B%E7%BC%A9%E5%8C%85">(1) 下载WinLibs压缩包</a></li>
+<li><a href="#2-%E9%85%8D%E7%BD%AE%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F">(2) 配置环境变量</a></li>
+<li><a href="#3-%E9%AA%8C%E8%AF%81%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F%E6%98%AF%E5%90%A6%E9%85%8D%E7%BD%AE%E6%88%90%E5%8A%9F">(3) 验证环境变量是否配置成功</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#%E4%BA%8C-%E4%BD%BF%E7%94%A8vscode%E8%BF%90%E8%A1%8C%E8%B0%83%E8%AF%95cc%E4%BB%A5%E5%8F%8A%E7%AE%80%E5%8D%95%E9%85%8D%E7%BD%AE">二、使用VSCode运行调试C&#x2F;C++以及简单配置</a><ul>
+<li><a href="#1-%E5%BC%80%E5%A7%8B%E8%BF%90%E8%A1%8Ccc">1、开始运行C&#x2F;C++</a><ul>
+<li><a href="#1-%E7%82%B9%E5%87%BBf8%E6%8C%89%E9%92%AE%E7%BC%96%E8%AF%91%E8%BF%90%E8%A1%8C%E7%A8%8B%E5%BA%8F">(1) 点击<code>f8</code>按钮编译运行程序</a></li>
+<li><a href="#2-%E7%82%B9%E5%87%BB%E5%8F%B3%E4%B8%8A%E8%A7%92%E7%9A%84%E4%B8%89%E8%A7%92%E5%BD%A2%E6%8C%89%E9%92%AE%E8%BF%90%E8%A1%8C%E7%A8%8B%E5%BA%8F">(2) 点击右上角的三角形按钮运行程序</a></li>
+</ul>
+</li>
+<li><a href="#2-%E8%B0%83%E8%AF%95cc%E7%A8%8B%E5%BA%8F">2、调试C&#x2F;C++程序</a></li>
+<li><a href="#3-vscode%E7%AE%80%E5%8D%95%E9%85%8D%E7%BD%AE">3、VSCode简单配置</a><ul>
+<li><a href="#1-%E5%AD%97%E4%BD%93%E9%85%8D%E7%BD%AE">(1) 字体配置</a></li>
 </ul>
 </li>
 </ul>
@@ -354,8 +388,39 @@
 </blockquote>
 <h3><span id="2-安装插件">2、安装插件</span></h3><h4><span id="1-安装语言插件">(1) 安装语言插件</span></h4><p>接下来找到左面第五个按钮，点击<br><img src="/2023/12/11/vscode%E9%85%8D%E7%BD%AEC++%E7%8E%AF%E5%A2%83/image3.png" alt="Alt text"><br>在搜索框内输入<code>Chinese</code>，一般是第一个，点击右下角<code>Install</code>等待安装插件完成<br><img src="/2023/12/11/vscode%E9%85%8D%E7%BD%AEC++%E7%8E%AF%E5%A2%83/image4.png" alt="Alt text"><br>安装完成后界面右下角会出现蓝色按钮<code>Change Language and Restart</code>点击完成更改语言并重新启动VSCode<br><img src="/2023/12/11/vscode%E9%85%8D%E7%BD%AEC++%E7%8E%AF%E5%A2%83/image5.png" alt="Alt text"><br>等待重启完成后界面语言就可以成功更改为简体中文<br><img src="/2023/12/11/vscode%E9%85%8D%E7%BD%AEC++%E7%8E%AF%E5%A2%83/image6.png" alt="Alt text"></p>
 <h4><span id="2-安装cx2fc智能提示插件">(2) 安装C&#x2F;C++智能提示插件</span></h4><p>在我们敲代码时智能代码提示既可以提高编程效率，也可以减少单词拼写错误的概率，所以同样的在插件管理界面搜索<code>C/C++</code><br><img src="/2023/12/11/vscode%E9%85%8D%E7%BD%AEC++%E7%8E%AF%E5%A2%83/image7.png" alt="Alt text"><br>一般第一个就是我们需要的插件 点击右下角安装等待完成即可</p>
-<h3><span id="3-安装编译器">3、安装编译器</span></h3><p>由于VSCode只是一个文本编辑器，我们如果要运行C&#x2F;C++代码需要额外的编译器，C&#x2F;C++三大主流编译器：GCC、Clang以及MSVC，在Virtual Studio 2022一般是使用的MSVC编译器，感兴趣的可以去了解下，这里我们用Clang作为我们的C&#x2F;C++编译器<br>在Windows平台上的编译器套件有Mingw、MSYS2等，这里我们使用一个比较简单的套件：WinLibs <a target="_blank" rel="noopener" href="https://winlibs.com/">https://winlibs.com/</a> <br>WinLibs是什么？简而言之：这是一个免费的微软Windows C和c++编译器。<br>GCC (GNU Compiler Collection)是一个免费的开源编译器，适用于C和c++(以及其他语言，如Objective-C, Fortran, D)。<br>MinGW-w64是一个针对Windows 32位和64位平台的免费开源C库。<br>这些组合在一起就产生了一个免费的Windows C&#x2F;C++编译器。<br>尽管GCC和MinGW-w64可以在其他平台(例如Linux)上使用来生成Windows可执行文件，但WinLibs项目只关注于构建在Windows上本机运行的版本。\</p>
-<h4><span id="1-下载winlibs压缩包">(1) 下载WinLibs压缩包</span></h4><p>打开官网后往下滑找到<code>Release versions</code><br><img src="/2023/12/11/vscode%E9%85%8D%E7%BD%AEC++%E7%8E%AF%E5%A2%83/image8.png" alt="Alt text"><br>根据电脑位数这里笔者选择的Win64紧跟着两个不同格式的压缩包，一般点击第二个也就是Zip压缩包，下载速度可能有快慢之分，等待下载完成后解压即可</p>
+<h3><span id="3-安装编译器">3、安装编译器</span></h3><p>由于VSCode只是一个文本编辑器，我们如果要运行C&#x2F;C++代码需要额外的编译器，C&#x2F;C++三大主流编译器：GCC、Clang以及MSVC，在Virtual Studio 2022一般是使用的MSVC编译器，感兴趣的可以去了解下，这里我们用Clang作为我们的C&#x2F;C++编译器<br>在Windows平台上的编译器套件有Mingw、MSYS2等，这里我们使用一个比较简单的套件：WinLibs <a target="_blank" rel="noopener" href="https://winlibs.com/">https://winlibs.com/</a> <br>WinLibs是什么？简而言之：这是一个免费的微软Windows C和c++编译器。<br>GCC (GNU Compiler Collection)是一个免费的开源编译器，适用于C和c++(以及其他语言，如Objective-C, Fortran, D)。<br>MinGW-w64是一个针对Windows 32位和64位平台的免费开源C库。<br>这些组合在一起就产生了一个免费的Windows C&#x2F;C++编译器。<br>尽管GCC和MinGW-w64可以在其他平台(例如Linux)上使用来生成Windows可执行文件，但WinLibs项目只关注于构建在Windows上本机运行的版本。</p>
+<h4><span id="1-下载winlibs压缩包">(1) 下载WinLibs压缩包</span></h4><p>打开官网后往下滑找到<code>Release versions</code><br><img src="/2023/12/11/vscode%E9%85%8D%E7%BD%AEC++%E7%8E%AF%E5%A2%83/image8.png" alt="Alt text"><br>根据电脑位数这里笔者选择的Win64紧跟着两个不同格式的压缩包，一般点击第二个也就是Zip压缩包，下载速度可能有快慢之分，等待下载完成后解压即可<br>解压完成后的界面应该是像下面这样：<br><img src="/2023/12/11/vscode%E9%85%8D%E7%BD%AEC++%E7%8E%AF%E5%A2%83/image9.png" alt="Alt text"><br>点击进入<code>bin</code>文件夹，在文件栏上方选中并复制路径，配置环境变量需要用到<br><img src="/2023/12/11/vscode%E9%85%8D%E7%BD%AEC++%E7%8E%AF%E5%A2%83/image11.png" alt="Alt text"><br>接下来开始配置环境变量</p>
+<h4><span id="2-配置环境变量">(2) 配置环境变量</span></h4><p>键入<code>win + S</code>组合键调出搜索框，输入<code>环境变量</code>出现<code>编辑系统环境变量</code>回车确定<br><img src="/2023/12/11/vscode%E9%85%8D%E7%BD%AEC++%E7%8E%AF%E5%A2%83/image10.png" alt="Alt text"><br>选择右下角<code>环境变量</code>按钮<br><img src="/2023/12/11/vscode%E9%85%8D%E7%BD%AEC++%E7%8E%AF%E5%A2%83/image12.png" alt="Alt text"></p>
+<p>双击<code>系统变量</code>里面的<code>Path</code>变量<br><img src="/2023/12/11/vscode%E9%85%8D%E7%BD%AEC++%E7%8E%AF%E5%A2%83/image13.png" alt="Alt text"><br>点击右上角的<code>新建</code>后在蓝色框内输入前面复制的<code>bin</code>文件夹的路径之后一路确定即可</p>
+<blockquote>
+<p>这里需要注意：最后一定是点击<code>确定</code>关闭对话框，绝对不可以点击右上角的叉号关闭对话框！(否则后面可能会出现识别不到的错误)</p>
+</blockquote>
+<p><img src="/2023/12/11/vscode%E9%85%8D%E7%BD%AEC++%E7%8E%AF%E5%A2%83/image14.png" alt="Alt text"></p>
+<h4><span id="3-验证环境变量是否配置成功">(3) 验证环境变量是否配置成功</span></h4><p>接下来开始验证是否配置环境变量成功，根据步骤(2)调出来搜索框输入<code>cmd</code>出现<code>命令提示符</code>后回车确定<br><img src="/2023/12/11/vscode%E9%85%8D%E7%BD%AEC++%E7%8E%AF%E5%A2%83/image15.png" alt="Alt text"></p>
+<p>输入<code>gcc -v</code>回车确定查询gcc版本，当出现<br><img src="/2023/12/11/vscode%E9%85%8D%E7%BD%AEC++%E7%8E%AF%E5%A2%83/image16.png" alt="Alt text"><br>后就代表gcc环境变量配置成功，同样输入<code>clang -v</code>可以查询clang的版本<br><img src="/2023/12/11/vscode%E9%85%8D%E7%BD%AEC++%E7%8E%AF%E5%A2%83/image17.png" alt="Alt text"></p>
+<blockquote>
+<p>注意：如果输入命令后出现下面的提示请重新回到配置环境变量那一步重新查看哪里出错<br><img src="/2023/12/11/vscode%E9%85%8D%E7%BD%AEC++%E7%8E%AF%E5%A2%83/image18.png" alt="Alt text"></p>
+</blockquote>
+<h2><span id="二-使用vscode运行调试cx2fc以及简单配置">二、使用VSCode运行调试C&#x2F;C++以及简单配置</span></h2><h3><span id="1-开始运行cx2fc">1、开始运行C&#x2F;C++</span></h3><p>回到VSCode软件，点击<code>打开文件夹</code>选择要保存C&#x2F;C++代码的文件<br><img src="/2023/12/11/vscode%E9%85%8D%E7%BD%AEC++%E7%8E%AF%E5%A2%83/image19.png" alt="Alt text"></p>
+<blockquote>
+<p>如果出现是否信任此文件夹一般选择信任即可</p>
+</blockquote>
+<p>这里我们运行一个C++文件，选择文件夹后出现四个图标，第一个是新建文件，点击它新建一个.cpp结尾的文件<br><img src="/2023/12/11/vscode%E9%85%8D%E7%BD%AEC++%E7%8E%AF%E5%A2%83/image20.png" alt="Alt text"><br>键入如下代码：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;iostream&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    std::cout &lt;&lt; <span class="string">&quot;hello world&quot;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在左侧点击插件在里面搜索<code>Compile</code>，第一个橙色图标的点击右下角安装<br><img src="/2023/12/11/vscode%E9%85%8D%E7%BD%AEC++%E7%8E%AF%E5%A2%83/image21.png" alt="Alt text"></p>
+<p>回到代码区，有两种运行代码的方法，选择自己喜欢的即可：</p>
+<h4><span id="1-点击f8按钮编译运行程序">(1) 点击<code>f8</code>按钮编译运行程序</span></h4><p>这个方法会调用外部终端显示内容<br><img src="/2023/12/11/vscode%E9%85%8D%E7%BD%AEC++%E7%8E%AF%E5%A2%83/image22.png" alt="Alt text">\</p>
+<h4><span id="2-点击右上角的三角形按钮运行程序">(2) 点击右上角的三角形按钮运行程序</span></h4><p>这个方法会在底部终端运行程序<br><img src="/2023/12/11/vscode%E9%85%8D%E7%BD%AEC++%E7%8E%AF%E5%A2%83/image23.png" alt="Alt text"></p>
+<blockquote>
+<p>同样的C语言代码只需要把文件名后缀改成.c即可，以上两种运行方式同样适用，不需要其它的操作</p>
+</blockquote>
+<h3><span id="2-调试cx2fc程序">2、调试C&#x2F;C++程序</span></h3><p>如果需要调试下面的C++程序</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;iostream&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="type">int</span> num = <span class="number">100</span>;</span><br><span class="line">    num = num + <span class="number">3</span>;</span><br><span class="line">    std::cout &lt;&lt; num;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>首先在需要开始调试的地方打上一个断点(点一下边缘出现红点即可)<br><img src="/2023/12/11/vscode%E9%85%8D%E7%BD%AEC++%E7%8E%AF%E5%A2%83/image26.png" alt="Alt text"><br>点击<code>f5</code>进入调试：<br><img src="/2023/12/11/vscode%E9%85%8D%E7%BD%AEC++%E7%8E%AF%E5%A2%83/image27.png" alt="Alt text"><br>在顶端中央出现一排按钮，可以选择调试模式，在左面区域是变量的值的变化，左下角是调用堆栈的变化</p>
+<blockquote>
+<p>使用调试可以验证我们的程序是否按照我们的想法运行，也可以帮助我们更快定位到bug所在</p>
+</blockquote>
+<h3><span id="3-vscode简单配置">3、VSCode简单配置</span></h3><h4><span id="1-字体配置">(1) 字体配置</span></h4><p>如果觉得代码字体太小可以点击左下角的齿轮打开设置<br><img src="/2023/12/11/vscode%E9%85%8D%E7%BD%AEC++%E7%8E%AF%E5%A2%83/image24.png" alt="Alt text"><br>在<code>font size</code>下面更改自己顺眼的字体大小<br><img src="/2023/12/11/vscode%E9%85%8D%E7%BD%AEC++%E7%8E%AF%E5%A2%83/image25.png" alt="Alt text"></p>
 
         
       </div>
