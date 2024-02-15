@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+
+
+<html theme="dark" showBanner="true" hasBanner="true" > 
+<link href="https://cdn.staticfile.org/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet">
+<link href="https://cdn.staticfile.org/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet">
+<link href="https://cdn.staticfile.org/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet">
+<script src="/js/color.global.min.js" ></script>
+<script src="/js/load-settings.js" ></script>
+<head>
+  <meta charset="utf-8">
+  
+  
+  
+<!-- Gaug.es Analytics -->
+<script>
+  var _gauges = _gauges || [];
+  (function() {
+    var t   = document.createElement('script');
+    t.async = true;
+    t.id    = 'gauges-tracker';
+    t.setAttribute('data-site-id', 'true');
+    t.setAttribute('data-track-path', 'https://track.gaug.es/track.gif');
+    t.src = 'https://d36ee2fcip1434.cloudfront.net/track.js';
+    var s = document.getElementsByTagName('script')[0];
+    s.parentNode.insertBefore(t, s);
+  })();
+</script>
+<!-- End Gaug.es Analytics -->
+
+
+  
+  <title>Rust引用安全 | Code</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <link rel="preload" href="/css/fonts/Roboto-Regular.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+  <link rel="preload" href="/css/fonts/Roboto-Bold.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+
+  <meta name="description" content="借用局部变量 接收引用作为函数参数 函数的引用 返回引用 包含引用的结构体 不同的生命周期参数 省略生命周期参数    Rust的引用看起来与C或C++中的普通指针非常相似。但是这些指针是不安全的；Rust是如何控制其引用的呢？也许最好的方法是尝试违反这些规则，以便看到它们是如何起作用的 为了传达基本思想，我们将从最简单的情况开始，展示Rust如何确保在单个函数体内正确使用引用。然后，我们将">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Rust引用安全">
+<meta property="og:url" content="http://example.com/2024/02/15/Rust%E5%BC%95%E7%94%A8%E5%AE%89%E5%85%A8/index.html">
+<meta property="og:site_name" content="Code">
+<meta property="og:description" content="借用局部变量 接收引用作为函数参数 函数的引用 返回引用 包含引用的结构体 不同的生命周期参数 省略生命周期参数    Rust的引用看起来与C或C++中的普通指针非常相似。但是这些指针是不安全的；Rust是如何控制其引用的呢？也许最好的方法是尝试违反这些规则，以便看到它们是如何起作用的 为了传达基本思想，我们将从最简单的情况开始，展示Rust如何确保在单个函数体内正确使用引用。然后，我们将">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-02-15T03:07:57.000Z">
+<meta property="article:modified_time" content="2024-02-15T05:00:16.141Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="生命周期">
+<meta property="article:tag" content="引用">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="Code" type="application/atom+xml">
+  
+  
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-32.png" sizes="32x32">
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-128.png" sizes="128x128">
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-180.png" sizes="180x180">
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-192.png" sizes="192x192">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-32.png" sizes="32x32">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-128.png" sizes="128x128">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-180.png" sizes="180x180">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-192.png" sizes="192x192">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body>
+  
+  
+    
+<div id="banner" class="">
+  <img src="https://c-ssl.duitang.com/uploads/blog/202103/16/20210316041943_4bea4.png" itemprop="image">
+  <div id="banner-dim"></div>
+</div>
+ 
+   
+  <div id="main-grid" class="shadow   ">
+    <div id="nav" class=""  >
+      <navbar id="navbar">
+  <nav id="title-nav">
+    <a href="/">
+      <div id="vivia-logo">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+      <div>Code </div>
+    </a>
+  </nav>
+  <nav id="main-nav">
+    
+      <a class="main-nav-link" href="/">主页</a>
+    
+      <a class="main-nav-link" href="/archives">归档</a>
+    
+      <a class="main-nav-link" href="/about">关于</a>
+    
+  </nav>
+  <nav id="sub-nav">
+    <a id="theme-btn" class="nav-icon">
+      <span class="light-mode-icon"><svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M438.5-829.913v-48q0-17.452 11.963-29.476 11.964-12.024 29.326-12.024 17.363 0 29.537 12.024t12.174 29.476v48q0 17.452-11.963 29.476-11.964 12.024-29.326 12.024-17.363 0-29.537-12.024T438.5-829.913Zm0 747.826v-48q0-17.452 11.963-29.476 11.964-12.024 29.326-12.024 17.363 0 29.537 12.024t12.174 29.476v48q0 17.452-11.963 29.476-11.964 12.024-29.326 12.024-17.363 0-29.537-12.024T438.5-82.087ZM877.913-438.5h-48q-17.452 0-29.476-11.963-12.024-11.964-12.024-29.326 0-17.363 12.024-29.537t29.476-12.174h48q17.452 0 29.476 11.963 12.024 11.964 12.024 29.326 0 17.363-12.024 29.537T877.913-438.5Zm-747.826 0h-48q-17.452 0-29.476-11.963-12.024-11.964-12.024-29.326 0-17.363 12.024-29.537T82.087-521.5h48q17.452 0 29.476 11.963 12.024 11.964 12.024 29.326 0 17.363-12.024 29.537T130.087-438.5Zm660.174-290.87-34.239 32q-12.913 12.674-29.565 12.174-16.653-.5-29.327-13.174-12.674-12.673-12.554-28.826.12-16.152 12.794-28.826l33-35q12.913-12.674 30.454-12.674t30.163 12.847q12.709 12.846 12.328 30.826-.38 17.98-13.054 30.653ZM262.63-203.978l-32 34q-12.913 12.674-30.454 12.674t-30.163-12.847q-12.709-12.846-12.328-30.826.38-17.98 13.054-30.653l33.239-31q12.913-12.674 29.565-12.174 16.653.5 29.327 13.174 12.674 12.673 12.554 28.826-.12 16.152-12.794 28.826Zm466.74 33.239-32-33.239q-12.674-12.913-12.174-29.565.5-16.653 13.174-29.327 12.673-12.674 28.826-13.054 16.152-.38 28.826 12.294l35 33q12.674 12.913 12.674 30.454t-12.847 30.163q-12.846 12.709-30.826 12.328-17.98-.38-30.653-13.054ZM203.978-697.37l-34-33q-12.674-12.913-13.174-29.945-.5-17.033 12.174-29.707t31.326-13.293q18.653-.62 31.326 13.054l32 34.239q11.674 12.913 11.174 29.565-.5 16.653-13.174 29.327-12.673 12.674-28.826 12.554-16.152-.12-28.826-12.794ZM480-240q-100 0-170-70t-70-170q0-100 70-170t170-70q100 0 170 70t70 170q0 100-70 170t-170 70Zm-.247-82q65.703 0 111.475-46.272Q637-414.544 637-480.247t-45.525-111.228Q545.95-637 480.247-637t-111.475 45.525Q323-545.95 323-480.247t45.525 111.975Q414.05-322 479.753-322ZM481-481Z"/></svg></span>
+      <span class="dark-mode-icon"><svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M480.239-116.413q-152.63 0-258.228-105.478Q116.413-327.37 116.413-480q0-130.935 77.739-227.435t206.304-125.043q43.022-9.631 63.87 10.869t3.478 62.805q-8.891 22.043-14.315 44.463-5.424 22.42-5.424 46.689 0 91.694 64.326 155.879 64.325 64.186 156.218 64.186 24.369 0 46.978-4.946 22.609-4.945 44.413-14.076 42.826-17.369 62.967 1.142 20.142 18.511 10.511 61.054Q807.174-280 712.63-198.206q-94.543 81.793-232.391 81.793Zm0-95q79.783 0 143.337-40.217 63.554-40.218 95.793-108.283-15.608 4.044-31.097 5.326-15.49 1.283-31.859.805-123.706-4.066-210.777-90.539-87.071-86.473-91.614-212.092-.24-16.369.923-31.978 1.164-15.609 5.446-30.978-67.826 32.478-108.282 96.152Q211.652-559.543 211.652-480q0 111.929 78.329 190.258 78.329 78.329 190.258 78.329ZM466.13-465.891Z"/></svg></span>
+    </a>
+    
+      <a id="nav-rss-link" class="nav-icon mobile-hide" href="/atom.xml" title="RSS 订阅">
+        <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M198-120q-25.846 0-44.23-18.384-18.384-18.385-18.384-44.23 0-25.846 18.384-44.23 18.384-18.385 44.23-18.385 25.846 0 44.23 18.385 18.384 18.384 18.384 44.23 0 25.845-18.384 44.23Q223.846-120 198-120Zm538.385 0q-18.846 0-32.923-13.769-14.076-13.769-15.922-33.23-8.692-100.616-51.077-188.654-42.385-88.039-109.885-155.539-67.5-67.501-155.539-109.885Q283-663.462 182.385-672.154q-19.461-1.846-33.23-16.23-13.769-14.385-13.769-33.846t14.076-32.922q14.077-13.461 32.923-12.23 120.076 8.692 226.038 58.768 105.961 50.077 185.73 129.846 79.769 79.769 129.846 185.731 50.077 105.961 58.769 226.038 1.231 18.846-12.538 32.922Q756.461-120 736.385-120Zm-252 0q-18.231 0-32.423-13.461t-18.653-33.538Q418.155-264.23 348.886-333.5q-69.27-69.27-166.501-84.423-20.077-4.462-33.538-18.961-13.461-14.5-13.461-33.346 0-19.076 13.884-33.23 13.884-14.153 33.115-10.922 136.769 15.384 234.384 112.999 97.615 97.615 112.999 234.384 3.231 19.23-10.538 33.115Q505.461-120 484.385-120Z"/></svg>
+      </a>
+    
+    <div id="nav-menu-btn" class="nav-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M177.37-252.282q-17.453 0-29.477-11.964-12.024-11.963-12.024-29.326t12.024-29.537q12.024-12.174 29.477-12.174h605.26q17.453 0 29.477 11.964 12.024 11.963 12.024 29.326t-12.024 29.537q-12.024 12.174-29.477 12.174H177.37Zm0-186.218q-17.453 0-29.477-11.963-12.024-11.964-12.024-29.326 0-17.363 12.024-29.537T177.37-521.5h605.26q17.453 0 29.477 11.963 12.024 11.964 12.024 29.326 0 17.363-12.024 29.537T782.63-438.5H177.37Zm0-186.217q-17.453 0-29.477-11.964-12.024-11.963-12.024-29.326t12.024-29.537q12.024-12.174 29.477-12.174h605.26q17.453 0 29.477 11.964 12.024 11.963 12.024 29.326t-12.024 29.537q-12.024 12.174-29.477 12.174H177.37Z"/></svg>
+    </div>
+  </nav>
+</navbar>
+<div id="nav-dropdown" class="hidden">
+  <div id="dropdown-link-list">
+    
+      <a class="nav-dropdown-link" href="/">主页</a>
+    
+      <a class="nav-dropdown-link" href="/archives">归档</a>
+    
+      <a class="nav-dropdown-link" href="/about">关于</a>
+    
+    
+      <a class="nav-dropdown-link" href="/atom.xml" title="RSS 订阅">RSS</a>
+     
+    </div>
+</div>
+<script>
+  let dropdownBtn = document.getElementById("nav-menu-btn");
+  let dropdownEle = document.getElementById("nav-dropdown");
+  dropdownBtn.onclick = function() {
+    dropdownEle.classList.toggle("hidden");
+  }
+</script>
+    </div>
+    <div id="sidebar-wrapper">
+      <sidebar id="sidebar">
+  
+    <div class="widget-wrap">
+  <div class="info-card">
+    <div class="avatar">
+      
+        <image src=/avatar/%E7%8C%AB%E7%BE%BD%E9%9B%AB.jpg></image>
+      
+      <div class="img-dim"></div>
+    </div>
+    <div class="info">
+      <div class="username">threeWater </div>
+      <div class="dot"></div>
+      <div class="subtitle">This is the subtitle </div>
+      <div class="link-list">
+        
+          <a class="link-btn" target="_blank" rel="noopener" href="https://en.cppreference.com/w/cpp" title="C++ reference"><i class="fa-solid fa-link"></i></a>
+        
+          <a class="link-btn" target="_blank" rel="noopener" href="https://godbolt.org/" title="Compiler Explorer"><i class="fa-solid fa-code"></i></a>
+        
+          <a class="link-btn" target="_blank" rel="noopener" href="https://github.com" title="GitHub"><i class="fa-brands fa-github"></i></a>
+         
+      </div>  
+    </div>
+  </div>
+</div>
+
+  
+  <div class="sticky">
+    
+      
+
+
+  <div class="widget-wrap">
+    <div class="widget">
+      <h3 class="widget-title">分类</h3>
+      <div class="category-box">
+            <a class="category-link" href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">
+                设计模式
+                <div class="category-count">1</div>
+            </a>
+        
+            <a class="category-link" href="/categories/C/">
+                C++
+                <div class="category-count">2</div>
+            </a>
+        
+            <a class="category-link" href="/categories/VSCode/">
+                VSCode
+                <div class="category-count">1</div>
+            </a>
+        <div class="children"><div class="category-box">
+            <a class="category-link" href="/categories/VSCode/C-C/">
+                C/C++
+                <div class="category-count">1</div>
+            </a>
+        </div></div>
+            <a class="category-link" href="/categories/Rust/">
+                Rust
+                <div class="category-count">1</div>
+            </a>
+        </div>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget-wrap">
+    <div class="widget">
+      <h3 class="widget-title">标签</h3>
+      <ul class="widget-tag-list" itemprop="keywords"><li class="widget-tag-list-item"><a class="widget-tag-list-link" href="/tags/%E5%85%A5%E9%97%A8/" rel="tag">入门</a></li><li class="widget-tag-list-item"><a class="widget-tag-list-link" href="/tags/%E5%BC%95%E7%94%A8/" rel="tag">引用</a></li><li class="widget-tag-list-item"><a class="widget-tag-list-link" href="/tags/%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE/" rel="tag">环境配置</a></li><li class="widget-tag-list-item"><a class="widget-tag-list-link" href="/tags/%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/" rel="tag">生命周期</a></li><li class="widget-tag-list-item"><a class="widget-tag-list-link" href="/tags/%E8%BF%90%E7%AE%97%E7%AC%A6%E9%87%8D%E8%BD%BD/" rel="tag">运算符重载</a></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget-wrap">
+    <div class="widget">
+      <h3 class="widget-title">归档</h3>
+      
+      
+        <a class="archive-link" href="/archives/2024/02 ">
+          二月 2024 
+          <div class="archive-count">1 </div>
+        </a>
+      
+        <a class="archive-link" href="/archives/2023/12 ">
+          十二月 2023 
+          <div class="archive-count">1 </div>
+        </a>
+      
+        <a class="archive-link" href="/archives/2023/11 ">
+          十一月 2023 
+          <div class="archive-count">4 </div>
+        </a>
+      
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget-wrap">
+    <div class="widget">
+      <h3 class="widget-title">最新文章</h3>
+      <ul>
+        
+          <a class="recent-link" href="/2024/02/15/Rust%E5%BC%95%E7%94%A8%E5%AE%89%E5%85%A8/" title="Rust引用安全" >
+            <div class="recent-link-text">
+              Rust引用安全
+            </div>
+          </a>
+        
+          <a class="recent-link" href="/2023/12/11/vscode%E9%85%8D%E7%BD%AEC++%E7%8E%AF%E5%A2%83/" title="VSCode配置C++环境(小白)" >
+            <div class="recent-link-text">
+              VSCode配置C++环境(小白)
+            </div>
+          </a>
+        
+          <a class="recent-link" href="/2023/11/20/23%E7%A7%8D%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" title="23种设计模式" >
+            <div class="recent-link-text">
+              23种设计模式
+            </div>
+          </a>
+        
+          <a class="recent-link" href="/2023/11/19/%E7%BD%95%E6%9C%89%E8%BF%90%E7%AE%97%E7%AC%A6%E9%87%8D%E8%BD%BD/" title="为智能指针实现operator->*的方式 ——Scott Meyers" >
+            <div class="recent-link-text">
+              为智能指针实现operator-&gt;*的方式 ——Scott Meyers
+            </div>
+          </a>
+        
+          <a class="recent-link" href="/2023/11/17/C++%E5%85%A5%E9%97%A8/" title="C++入门" >
+            <div class="recent-link-text">
+              C++入门
+            </div>
+          </a>
+        
+      </ul>
+    </div>
+  </div>
+
+    
+  </div>
+</sidebar>
+    </div>
+    <div id="content-body">
+       
+
+
+<article id="post-Rust引用安全" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  
+    
+   
+  <div class="article-inner">
+    <div class="article-main">
+      <header class="article-header">
+        
+<div class="main-title-bar">
+  <div class="main-title-dot"></div>
+  
+    
+      <h1 class="p-name article-title" itemprop="headline name">
+        Rust引用安全
+      </h1>
+    
+  
+</div>
+
+        <div class='meta-info-bar'>
+          <div class="meta-info">
+  <time class="dt-published" datetime="2024-02-15T03:07:57.000Z" itemprop="datePublished">2024-02-15</time>
+</div>
+          <div class="need-seperator meta-info">
+            <div class="meta-cate-flex">
+  
+  <a class="meta-cate-link" href="/categories/Rust/">Rust</a>
+   
+</div>
+  
+          </div>
+          <div class="wordcount need-seperator meta-info">
+            12k 词 
+          </div>
+        </div>
+        
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E5%BC%95%E7%94%A8/" rel="tag">引用</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/" rel="tag">生命周期</a></li></ul>
+
+      </header>
+      <div class="e-content article-entry" itemprop="articleBody">
+        
+          <!-- toc -->
+
+<ul>
+<li><a href="#%E5%80%9F%E7%94%A8%E5%B1%80%E9%83%A8%E5%8F%98%E9%87%8F">借用局部变量</a></li>
+<li><a href="#%E6%8E%A5%E6%94%B6%E5%BC%95%E7%94%A8%E4%BD%9C%E4%B8%BA%E5%87%BD%E6%95%B0%E5%8F%82%E6%95%B0">接收引用作为函数参数</a></li>
+<li><a href="#%E5%87%BD%E6%95%B0%E7%9A%84%E5%BC%95%E7%94%A8">函数的引用</a></li>
+<li><a href="#%E8%BF%94%E5%9B%9E%E5%BC%95%E7%94%A8">返回引用</a></li>
+<li><a href="#%E5%8C%85%E5%90%AB%E5%BC%95%E7%94%A8%E7%9A%84%E7%BB%93%E6%9E%84%E4%BD%93">包含引用的结构体</a></li>
+<li><a href="#%E4%B8%8D%E5%90%8C%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E5%8F%82%E6%95%B0">不同的生命周期参数</a></li>
+<li><a href="#%E7%9C%81%E7%95%A5%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E5%8F%82%E6%95%B0">省略生命周期参数</a></li>
+</ul>
+<!-- tocstop -->
+
+<p>Rust的引用看起来与C或C++中的普通指针非常相似。但是这些指针是不安全的；Rust是如何控制其引用的呢？也许最好的方法是尝试违反这些规则，以便看到它们是如何起作用的</p>
+<p>为了传达基本思想，我们将从最简单的情况开始，展示Rust如何确保在单个函数体内正确使用引用。然后，我们将研究在函数之间传递引用和将其存储在数据结构中。这涉及到为这些函数和数据类型提供生命周期参数，我们将对此进行解释。最后，我们将介绍一些Rust提供的简化常见使用模式的快捷方式。在整个过程中，我们将展示Rust如何指出错误的代码，并经常提出解决方案的建议</p>
+<h2><span id="借用局部变量">借用局部变量</span></h2><p>这是一个非常明显的情况。你不能借用对局部变量的引用并将其带出变量的作用域：</p>
+<figure class="highlight rust"><figcaption><span>&#123;.line-numbers&#125;</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">r</span>;</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">let</span> <span class="variable">x</span> = <span class="number">1</span>;</span><br><span class="line">        r = &amp;x;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">assert_eq!</span>(*r, <span class="number">1</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Rust编译器拒绝了这个程序，并提供了详细的错误信息：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">error[E0597]: `x` does not live long enough</span><br><span class="line"> -<span class="punctuation">-&gt;</span> main.rs:<span class="number">5</span>:<span class="number">13</span></span><br><span class="line">  |</span><br><span class="line"><span class="number">4</span> |         <span class="keyword">let</span> <span class="variable">x</span> = <span class="number">1</span>;</span><br><span class="line">  |             - binding `x` declared here</span><br><span class="line"><span class="number">5</span> |         r = &amp;x;</span><br><span class="line">  |             ^^ borrowed value does not live long enough</span><br><span class="line"><span class="number">6</span> |     &#125;</span><br><span class="line">  |     - `x` dropped here <span class="keyword">while</span> still borrowed</span><br><span class="line"><span class="number">7</span> |     <span class="built_in">assert_eq!</span>(*r, <span class="number">1</span>);</span><br><span class="line">  |     ----------------- borrow later used here</span><br><span class="line"></span><br><span class="line">error: aborting due to previous error</span><br><span class="line"></span><br><span class="line">For more information about this error, <span class="keyword">try</span> `rustc --explain E0597`.</span><br></pre></td></tr></table></figure>
+<p>Rust的错误信息指出，变量 <code>x</code> 的生命周期仅限于内部块的结束，而引用的生命周期则延续到外部块的结束，这导致了悬空指针的情况，而这是被禁止的</p>
+<p>尽管对于人类读者来说，这个程序存在问题是显而易见的，但值得看一下Rust是如何得出这个结论的。即使是这个简单的例子也展示了Rust用来检查更复杂代码的逻辑工具</p>
+<p>Rust试图为程序中的每种引用类型分配一个符合其使用方式所施加的约束的生命周期。生命周期是程序中某段可以安全使用引用的时间范围：一个语句、一个表达式、某个变量的作用域等。生命周期完全是Rust在编译时想象出来的概念。在运行时，引用只是一个地址；它的生命周期是其类型的一部分，没有运行时表示</p>
+<p>在这个例子中，有三个生命周期，我们需要弄清楚它们之间的关系。变量 <code>r</code> 和 <code>x</code> 都有一个生命周期，从它们被初始化的点一直延续到编译器能够证明它们不再被使用的点。第三个生命周期是引用类型的生命周期：我们借用给 <code>x</code> 并存储在 <code>r</code> 中的引用类型的生命周期</p>
+<p>① 有一个约束应该是非常明显的：如果有一个变量 <code>x</code>，那么对 <code>x</code> 的引用不能超过 x 本身的生命周期</p>
+<p>一旦 <code>x</code> 超出作用域，引用就会变成悬空指针。我们说变量的生命周期必须包含或包围从它借用的引用的生命周期</p>
+<p>② 这里还有另一种约束：如果你将一个引用存储在变量 <code>r</code> 中，那么引用的类型必须在整个变量的生命周期中都是有效的，从初始化到最后的使用</p>
+<p>如果引用的生命周期不能至少与变量的生命周期一样长，那么在某个时刻，<code>r</code> 就会成为一个悬空指针。我们说引用的生命周期必须包含或包围变量的生命周期</p>
+<p>第一种约束限制了引用的生命周期可以有多长，而第二种约束限制了它可以有多短。Rust只是简单地尝试找到一个满足所有这些约束的引用的生命周期。然而，在我们的例子中，没有这样的生命周期</p>
+<p>现在让我们考虑一个不同的例子，在这个例子中事情是可以解决的。我们有相同类型的约束：引用的生命周期必须被包含在 <code>x</code> 的生命周期内，但完全包围 <code>r</code> 的生命周期。但是因为 <code>r</code> 的生命周期现在更短了，所以有一个满足约束的生命周期</p>
+<p>当你借用一个对较大数据结构中的某个部分的引用时（例如向量中的元素），这些规则自然地适用：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> <span class="variable">v</span> = <span class="built_in">vec!</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>];</span><br><span class="line"><span class="keyword">let</span> <span class="variable">r</span> = &amp;v[<span class="number">1</span>];</span><br></pre></td></tr></table></figure>
+<p>由于 <code>v</code> 拥有向量，而向量拥有它的元素，因此 <code>v</code> 的生命周期必须包含 <code>&amp;v[1]</code> 的引用类型的生命周期。同样地，如果你将一个引用存储在某个数据结构中，那么它的生命周期必须包围该数据结构的生命周期。例如，如果你构建一个引用的向量，那么所有的引用都必须有生命周期包围该拥有向量的变量的生命周期</p>
+<p>这就是Rust用于所有代码的过程的本质。引入更多的语言特性，例如数据结构和函数调用，会引入新的约束类型，但原则仍然相同：首先，理解程序使用引用的约束；然后，找到满足这些约束的生命周期。这与C和C ++程序员自我施加的过程并没有太大的区别；不同之处在于Rust知道这些规则并强制执行它们</p>
+<h2><span id="接收引用作为函数参数">接收引用作为函数参数</span></h2><p>当我们将一个引用传递给函数时，Rust如何确保函数安全地使用它？假设我们有一个函数 <code>f</code>，它接收一个引用并将其存储在一个全局变量中。我们需要对此进行一些修订，但下面是一个初步的示例：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 这段代码有几个问题，并且无法编译</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">mut</span> STASH: &amp;<span class="type">i32</span>;</span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">f</span>(p: &amp;<span class="type">i32</span>) &#123;</span><br><span class="line">    STASH = p;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Rust中等价于全局变量的是静态变量（<code>static</code>）：它是在程序启动时创建的值，并持续存在直到程序终止。（与任何其他声明一样，Rust的模块系统控制着静态变量的可见性，因此它们只在其生命周期内是“全局”的，而不是它们的可见性。）我们将在第8章中介绍静态变量，但现在我们只强调一下代码刚才展示的几个规则：</p>
+<ul>
+<li>每个静态变量都必须被初始化</li>
+<li>可变静态变量本质上不是线程安全的（毕竟，任何线程都可以在任何时候访问静态变量），即使在单线程程序中，它们也可能受到其他类型的重入问题的影响。出于这些原因，你只能在一个<code>unsafe</code>块内访问可变静态变量。在这个示例中，我们不关心这些特定的问题，所以我们只需添加一个<code>unsafe</code>块并继续</li>
+</ul>
+<p>经过这些修订，我们现在有以下内容:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">mut</span> STASH: &amp;<span class="type">i32</span> = &amp;<span class="number">128</span>;</span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">f</span>(p: &amp;<span class="type">i32</span>) &#123; <span class="comment">// 仍然不够好</span></span><br><span class="line">    <span class="keyword">unsafe</span> &#123;</span><br><span class="line">        STASH = p;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>我们差不多完成了。要看到剩下的问题，我们需要写出一些 Rust 正在帮助我们省略的内容。<code>f</code> 的签名如此书写实际上是以下的简写形式：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">f</span>&lt;<span class="symbol">&#x27;a</span>&gt;(p: &amp;<span class="symbol">&#x27;a</span> <span class="type">i32</span>) &#123;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在这里，生命周期 <code>&#39;a</code>（发音为“tick A”）是 <code>f</code> 的生命周期参数。你可以将 &lt;’a&gt; 理解为“对于任何生命周期 <code>&#39;a</code>”，所以当我们写 <code>fn f&lt;&#39;a&gt;(p: &amp;&#39;a i32)</code> 时，我们定义了一个函数，它接收一个具有任意给定生命周期 <code>&#39;a</code> 的 <code>i32</code> 的引用</p>
+<p>由于我们必须允许 <code>&#39;a</code> 是任何生命周期，如果它是最小可能的生命周期，事情最好能够正常工作：就是仅仅包含调用 <code>f</code> 的生命周期。然后，这个赋值就成为争议点：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">STASH = p;</span><br></pre></td></tr></table></figure>
+<p>由于 <code>STASH</code> 存在于整个程序执行期间，它所持有的引用类型必须具有相同长度的生命周期；Rust 将其称为 <code>&#39;static</code> 生命周期。但是，<code>p</code> 的引用的生命周期是某个 <code>&#39;a</code>，它可以是任何值，只要它包含调用 <code>f</code> 的部分。因此，Rust 拒绝了我们的代码：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">error: lifetime may not live long enough</span><br><span class="line"> -<span class="punctuation">-&gt;</span> main.rs:<span class="number">4</span>:<span class="number">9</span></span><br><span class="line">  |</span><br><span class="line"><span class="number">2</span> | <span class="keyword">fn</span> <span class="title function_">f</span>(p: &amp;<span class="type">i32</span>) &#123; <span class="comment">// 仍然不够好</span></span><br><span class="line">  |         - <span class="keyword">let</span><span class="symbol">&#x27;s</span> call the lifetime of this reference `&#x27;<span class="number">1</span>`</span><br><span class="line"><span class="number">3</span> |     <span class="keyword">unsafe</span> &#123;</span><br><span class="line"><span class="number">4</span> |         STASH = p;</span><br><span class="line">  |         ^^^^^^^^^ assignment requires that `&#x27;<span class="number">1</span>` must outlive `<span class="symbol">&#x27;static</span>`</span><br><span class="line"></span><br><span class="line">error: aborting due to previous error</span><br></pre></td></tr></table></figure>
+<p>到这一点，很明显我们的函数不能接受任何引用作为参数。但正如 Rust 指出的那样，它应该能够接受一个具有 <code>&#39;static</code> 生命周期的引用：将这样的引用存储在 <code>STASH</code> 中不会创建悬空指针。事实上，以下代码编译得非常顺利：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">mut</span> STASH: &amp;<span class="type">i32</span> = &amp;<span class="number">10</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">f</span>(p: &amp;<span class="symbol">&#x27;static</span> <span class="type">i32</span>) &#123;</span><br><span class="line">    <span class="keyword">unsafe</span> &#123;</span><br><span class="line">        STASH = p;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这一次，<code>f</code> 的签名明确指出 <code>p</code> 必须是一个具有 <code>&#39;static</code> 生命周期的引用，因此再也没有将其存储在 <code>STASH</code> 中的问题。我们只能将 <code>f</code> 应用于其他静态引用，但这也是唯一可以确保不会使 <code>STASH</code> 悬空的方法。因此，我们可以写下以下代码：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> WORTH_POINTING_AT: <span class="type">i32</span> = <span class="number">1000</span>;</span><br><span class="line"><span class="title function_ invoke__">f</span>(&amp;WORTH_POINTING_AT);</span><br></pre></td></tr></table></figure>
+<p>由于 <code>WORTH_POINTING_AT</code> 是一个静态变量，因此 &amp;<code>WORTH_POINTING_AT</code> 的类型是 <code>&amp;&#39;static i32</code>，可以安全地传递给函数 <code>f</code></p>
+<p>然而，退一步来看，注意到在我们修正代码的过程中，f 的签名发生了什么变化：原来的 <code>f(p: &amp;i32)</code> 变成了 <code>f(p: &amp;&#39;static i32)</code>。换句话说，我们无法编写一个将引用存储在全局变量中而不在函数签名中反映这个意图的函数。在 Rust 中，函数的签名总是暴露出函数体的行为。相反地，如果我们看到一个带有类似 <code>g(p: &amp;i32)</code>（或者使用生命周期写出的形式，<code>g&lt;&#39;a&gt;(p: &amp;&#39;a i32)</code>）的函数签名，我们可以知道它不会将其参数 <code>p</code> 存储在任何超过函数调用的范围之外的位置。无需查看 <code>g</code> 的定义；仅凭签名就可以告诉我们 <code>g</code> 对其参数能够做什么和不能做什么。当你试图确定对函数的调用是否安全时，这一事实非常有用</p>
+<h2><span id="函数的引用">函数的引用</span></h2><p>现在我们已经展示了函数签名与其主体的关系，让我们来看看它如何与函数的调用者相关联。假设你有以下代码：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 这段代码可以更简洁地写成 fn g(p: &amp;i32)，但是现在让我们写出生命周期</span></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">g</span>&lt;<span class="symbol">&#x27;a</span>&gt;(p: &amp;<span class="symbol">&#x27;a</span> <span class="type">i32</span>) &#123;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> <span class="variable">x</span> = <span class="number">10</span>;</span><br><span class="line"><span class="title function_ invoke__">g</span>(&amp;x);</span><br></pre></td></tr></table></figure>
+<p>仅凭 <code>g</code> 的签名，Rust 就知道它不会将 <code>p</code> 保存在任何可能超过函数调用的范围的位置：任何包含调用的生命周期都必须适用于 <code>&#39;a</code>。因此，Rust 选择了 <code>&amp;x</code> 的最小可能生命周期：即调用 <code>g</code> 的生命周期。这满足了所有的约束条件：它不会超出 <code>x</code> 的生命周期，并且它包含了对 <code>g</code> 的整个调用。因此，这段代码通过了审查</p>
+<p>需要注意的是，虽然 <code>g</code> 带有一个生命周期参数 <code>&#39;a</code>，但在调用 <code>g</code> 时我们不需要提及它。只有在定义函数和类型时才需要关注生命周期参数；在使用它们时，Rust 会为你推断生命周期</p>
+<p>那么，如果我们尝试将 <code>&amp;x</code> 传递给之前那个将其参数存储为静态变量的函数 <code>f</code> 会怎样呢？</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">f</span>(p: &amp;<span class="symbol">&#x27;static</span> <span class="type">i32</span>) &#123;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> <span class="variable">x</span> = <span class="number">10</span>;</span><br><span class="line"><span class="title function_ invoke__">f</span>(&amp;x);</span><br></pre></td></tr></table></figure>
+<p>这段代码无法编译通过：引用 <code>&amp;x</code> 不能超出 <code>x</code> 的生命周期，但是通过将它传递给 <code>f</code>，我们将其约束为至少与 <code>&#39;static</code> 一样长。在这里没有办法满足所有人的需求，因此 Rust 拒绝了这段代码</p>
+<h2><span id="返回引用">返回引用</span></h2><p>通常情况下，函数会接受一个数据结构的引用，然后返回该结构某个部分的引用。例如，下面是一个返回切片最小元素引用的函数：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// v 应该至少有一个元素</span></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">smallest</span>(v: &amp;[<span class="type">i32</span>]) <span class="punctuation">-&gt;</span> &amp;<span class="type">i32</span> &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut </span><span class="variable">s</span> = &amp;v[<span class="number">0</span>];</span><br><span class="line">    <span class="keyword">for</span> <span class="variable">r</span> <span class="keyword">in</span> &amp;v[<span class="number">1</span>..] &#123;</span><br><span class="line">        <span class="keyword">if</span> *r &lt; *s &#123;</span><br><span class="line">            s = r;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    s</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>我们通常省略函数签名中的生命周期。当函数以一个引用作为参数并返回一个引用时，Rust会假定两者必须拥有相同的生命周期。如果要显式地写出它，会是这样：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">smallest</span>&lt;<span class="symbol">&#x27;a</span>&gt;(v: &amp;<span class="symbol">&#x27;a</span> [<span class="type">i32</span>]) <span class="punctuation">-&gt;</span> &amp;<span class="symbol">&#x27;a</span> <span class="type">i32</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>假设我们这样调用 <code>smallest</code> 函数：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> <span class="variable">s</span>;</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">parabola</span> = [<span class="number">9</span>, <span class="number">4</span>, <span class="number">1</span>, <span class="number">0</span>, <span class="number">1</span>, <span class="number">4</span>, <span class="number">9</span>];</span><br><span class="line">    s = <span class="title function_ invoke__">smallest</span>(&amp;parabola);</span><br><span class="line">&#125;</span><br><span class="line"><span class="title function_ invoke__">assert_eq</span>(*s, <span class="number">0</span>);   <span class="comment">// 错误：指向已经丢弃的数组的元素</span></span><br></pre></td></tr></table></figure>
+<p>根据 <code>smallest</code> 的签名，我们可以看到它的参数和返回值必须拥有相同的生命周期 ‘a。在我们的调用中，参数 <code>&amp;parabola</code> 不能超出 <code>parabola</code> 本身的生命周期，然而 <code>smallest</code> 的返回值必须至少与 <code>s</code> 一样长。没有可能的生命周期 <code>&#39;a</code> 能够满足这两个约束条件，因此 Rust 拒绝了这段代码：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">error[E0597]: `parabola` does not live long enough</span><br><span class="line">  -<span class="punctuation">-&gt;</span> main.rs:<span class="number">15</span>:<span class="number">22</span></span><br><span class="line">   |</span><br><span class="line"><span class="number">14</span> |         <span class="keyword">let</span> <span class="variable">parabola</span> = [<span class="number">9</span>, <span class="number">4</span>, <span class="number">1</span>, <span class="number">0</span>, <span class="number">1</span>, <span class="number">4</span>, <span class="number">9</span>];</span><br><span class="line">   |             -------- binding `parabola` declared here</span><br><span class="line"><span class="number">15</span> |         s = <span class="title function_ invoke__">smallest</span>(&amp;parabola);</span><br><span class="line">   |                      ^^^^^^^^^ borrowed value does not live long enough</span><br><span class="line"><span class="number">16</span> |     &#125;</span><br><span class="line">   |     - `parabola` dropped here <span class="keyword">while</span> still borrowed</span><br><span class="line"><span class="number">17</span> |     <span class="built_in">assert_eq!</span>(*s, <span class="number">0</span>);</span><br><span class="line">   |     ----------------- borrow later used here</span><br><span class="line"></span><br><span class="line">error: aborting due to previous error</span><br><span class="line"></span><br><span class="line">For more information about this error, <span class="keyword">try</span> `rustc --explain E0597`.</span><br></pre></td></tr></table></figure>
+<p>将 <code>s</code> 移动到其生命周期明显包含在 <code>parabola</code> 内的位置可以解决问题：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">parabola</span> = [<span class="number">9</span>, <span class="number">4</span>, <span class="number">1</span>, <span class="number">0</span>, <span class="number">1</span>, <span class="number">4</span>, <span class="number">9</span>];</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">s</span> = <span class="title function_ invoke__">smallest</span>(&amp;parabola);</span><br><span class="line">    <span class="built_in">assert_eq!</span>(*s, <span class="number">0</span>);  <span class="comment">// 正确：parabola 仍然存活</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>函数签名中的生命周期让 Rust 能够评估你传递给函数的引用之间的关系，以及函数返回的引用与它们的关系，并确保它们被安全地使用</p>
+<h2><span id="包含引用的结构体">包含引用的结构体</span></h2><p>Rust如何处理存储在数据结构中的引用？这是之前我们看过的同样错误的程序，只是将引用放在了一个结构体内部:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 这无法编译</span></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">S</span> &#123;</span><br><span class="line">    r: &amp;<span class="type">i32</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> <span class="variable">s</span>;</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">x</span> = <span class="number">10</span>;</span><br><span class="line">    s = S &#123; r: &amp;x &#125;;</span><br><span class="line">&#125;</span><br><span class="line"><span class="title function_ invoke__">assert_eq</span>(*s.r, <span class="number">10</span>);    <span class="comment">// 错误：从已经丢弃的 x 读取</span></span><br></pre></td></tr></table></figure>
+<p>Rust对引用所施加的安全性约束并不会因为我们将引用隐藏在结构体内部而自动消失。不管怎样，这些约束必须也适用于 <code>S</code>。事实上，Rust是持怀疑态度的：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">error[E0106]: missing lifetime specifier</span><br><span class="line"> -<span class="punctuation">-&gt;</span> main.rs:<span class="number">2</span>:<span class="number">8</span></span><br><span class="line">  |</span><br><span class="line"><span class="number">2</span> |     r: &amp;<span class="type">i32</span></span><br><span class="line">  |        ^ expected named lifetime parameter</span><br><span class="line">  |</span><br><span class="line">help: consider introducing a named lifetime parameter</span><br><span class="line">  |</span><br><span class="line"><span class="number">1</span> ~ <span class="keyword">struct</span> <span class="title class_">S</span>&lt;<span class="symbol">&#x27;a</span>&gt; &#123;</span><br><span class="line"><span class="number">2</span> ~     r: &amp;<span class="symbol">&#x27;a</span> <span class="type">i32</span></span><br><span class="line">  |</span><br><span class="line"></span><br><span class="line">error[E0423]: expected function, found <span class="keyword">macro</span> `assert_eq`</span><br><span class="line">  -<span class="punctuation">-&gt;</span> main.rs:<span class="number">12</span>:<span class="number">5</span></span><br><span class="line">   |</span><br><span class="line"><span class="number">12</span> |     <span class="title function_ invoke__">assert_eq</span>(*s.r, <span class="number">10</span>);    <span class="comment">// 错误：从已经丢弃的 x 读取</span></span><br><span class="line">   |     ^^^^^^^^^ not a function</span><br><span class="line">   |</span><br><span class="line">help: <span class="keyword">use</span> `!` to invoke the <span class="keyword">macro</span></span><br><span class="line">   |</span><br><span class="line"><span class="number">12</span> |     <span class="built_in">assert_eq!</span>(*s.r, <span class="number">10</span>);    <span class="comment">// 错误：从已经丢弃的 x 读取</span></span><br><span class="line">   |              +</span><br><span class="line"></span><br><span class="line">error: aborting due to <span class="number">2</span> previous errors</span><br><span class="line"></span><br><span class="line"><span class="literal">Some</span> errors have detailed explanations: E0106, E0423.</span><br><span class="line">For more information about an error, <span class="keyword">try</span> `rustc --explain E0106`.</span><br></pre></td></tr></table></figure>
+<p>每当一个引用类型出现在另一个类型的定义中时，你必须写出它的生命周期。你可以这样写：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> <span class="title class_">S</span> &#123;</span><br><span class="line">    r:&amp;<span class="symbol">&#x27;static</span> <span class="type">i32</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这意味着 <code>r</code> 只能引用在整个程序生命周期内持续存在的 <code>i32</code> 值，这相当受限制。另一种选择是给类型添加一个生命周期参数 <code>&#39;a</code>，并将其用于 <code>r</code>：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> <span class="title class_">S</span>&lt;<span class="symbol">&#x27;a</span>&gt; &#123;</span><br><span class="line">    r: &amp;<span class="symbol">&#x27;a</span> <span class="type">i32</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>现在 <code>S</code> 类型有了一个生命周期，就像引用类型一样。每个你创建的 <code>S</code> 类型的值都会获得一个新的生命周期 <code>&#39;a</code>，它会受你如何使用该值的限制。你存储在 <code>r</code> 中的任何引用的生命周期最好要包含 <code>&#39;a</code>，并且 <code>&#39;a</code> 必须至少要比你存储 <code>S</code> 的位置的生命周期长</p>
+<p>回到之前的代码，表达式 <code>S &#123; r: &amp;x &#125;</code> 创建了一个具有某个生命周期 <code>&#39;a</code> 的新的 <code>S</code> 值。当你将 <code>&amp;x</code> 存储在 <code>r</code> 字段中时，你限制了 <code>&#39;a</code> 必须完全位于 <code>x</code> 的生命周期内</p>
+<p>赋值 <code>s = S &#123; ... &#125;</code> 将这个 <code>S</code> 存储在一个变量中，其生命周期延伸到示例的末尾，将 <code>&#39;a</code> 限制为必须比 <code>s</code> 的生命周期更长。现在 Rust 遇到了与之前相同的矛盾约束：<code>&#39;a</code> 不能超过 <code>x</code> 的生命周期，但必须至少与 <code>s</code> 的生命周期一样长。没有满意的生命周期存在，因此 Rust 拒绝了这段代码。灾难避免了！</p>
+<p>当将具有生命周期参数的类型放入另一种类型中时，它会表现出怎样的行为呢？</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> <span class="title class_">D</span> &#123;</span><br><span class="line">    s: S    <span class="comment">// not adequate</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Rust 是持怀疑态度的，就像在我们尝试将引用放入 <code>S</code> 中而没有指定其生命周期时那样:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">error[E0106]: missing lifetime specifier</span><br><span class="line"> -<span class="punctuation">-&gt;</span> main.rs:<span class="number">5</span>:<span class="number">8</span></span><br><span class="line">  |</span><br><span class="line"><span class="number">5</span> |     s: S</span><br><span class="line">  |        ^ expected named lifetime parameter</span><br><span class="line">  |</span><br><span class="line">help: consider introducing a named lifetime parameter</span><br><span class="line">  |</span><br><span class="line"><span class="number">4</span> ~ <span class="keyword">struct</span> <span class="title class_">D</span>&lt;<span class="symbol">&#x27;a</span>&gt; &#123;</span><br><span class="line"><span class="number">5</span> ~     s: S&lt;<span class="symbol">&#x27;a</span>&gt;</span><br><span class="line">  |</span><br><span class="line"></span><br><span class="line">error: aborting due to previous error</span><br><span class="line"></span><br><span class="line">For more information about this error, <span class="keyword">try</span> `rustc --explain E0106`.</span><br></pre></td></tr></table></figure>
+<p>在这里我们不能省略 <code>S</code> 的生命周期参数：Rust 需要知道 <code>D</code> 的生命周期与其 <code>S</code> 中的引用的生命周期之间的关系，以便对 <code>D</code> 进行与 <code>S</code> 和纯引用相同的检查</p>
+<p>我们可以给 <code>s</code> 分配 <code>&#39;static</code> 生命周期。这是可行的:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> <span class="title class_">D</span> &#123;</span><br><span class="line">    s: S&lt;<span class="symbol">&#x27;static</span>&gt;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>有了这个定义，<code>s</code> 字段只能借用在整个程序执行期间都存在的值。这有点严格，但它确保 <code>D</code> 不可能借用一个局部变量；因此，对于 <code>D</code> 的生命周期没有特殊的限制</p>
+<p>Rust 的错误消息实际上建议了另一种更通用的方法：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">help: consider introducing a named lifetime parameter</span><br><span class="line">  |</span><br><span class="line"><span class="number">7</span> | <span class="keyword">struct</span> <span class="title class_">D</span>&lt;<span class="symbol">&#x27;a</span>&gt; &#123;</span><br><span class="line"><span class="number">8</span> | s: S&lt;<span class="symbol">&#x27;a</span>&gt;</span><br><span class="line">  |</span><br></pre></td></tr></table></figure>
+<p>在这里，我们为 <code>D</code> 给予它自己的生命周期参数，并将其传递给 <code>S</code>:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> <span class="title class_">D</span>&lt;<span class="symbol">&#x27;a</span>&gt; &#123;</span><br><span class="line">    s: S&lt;<span class="symbol">&#x27;a</span>&gt;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>通过使用生命周期参数 <code>&#39;a</code> 并将其应用于 <code>s</code> 的类型，我们允许 Rust 将 <code>D</code> 值的生命周期与其 <code>S</code> 持有的引用相关联</p>
+<p>我们之前展示了函数签名如何显示它对我们传递的引用执行的操作。现在我们展示了类型的类似情况：类型的生命周期参数总是揭示了它是否包含具有有趣（即非 <code>&#39;static</code>）生命周期的引用以及这些生命周期可能是什么样的</p>
+<p>例如，假设我们有一个解析函数，它接受字节切片并返回一个包含解析结果的结构：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">parse_record</span>&lt;<span class="symbol">&#x27;i</span>&gt;(input: &amp;<span class="symbol">&#x27;i</span> [<span class="type">u8</span>]) <span class="punctuation">-&gt;</span> Record&lt;<span class="symbol">&#x27;i</span>&gt; &#123;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在完全不看 Record 类型的定义的情况下，我们可以得知，如果我们从 <code>parse_record</code> 收到一个 <code>Record</code>，那么它包含的任何引用必须指向我们传入的输入缓冲区，而不是其他地方（也许除了<code>&#39;static</code>值）</p>
+<p>事实上，这种对内部行为的暴露是 Rust 要求包含引用的类型需要采用显式生命周期参数的原因。Rust 没有理由不能简单地为结构中的每个引用制定一个不同的生命周期并免去您编写生命周期参数的麻烦。早期版本的 Rust 实际上就是这样运作的，但开发人员发现这很令人困惑：知道一个值从另一个值借用东西何时结束会很有帮助，尤其是在处理错误时</p>
+<p>不仅是引用和类似 <code>S</code> 的类型有生命周期，Rust 中的每种类型都有生命周期，包括 <code>i32</code> 和 <code>String</code>。大多数类型只是 <code>&#39;static</code>，这意味着这些类型的值可以存活多久都可以；例如，<code>Vec&lt;i32&gt;</code> 是自包含的，不需要在特定变量超出作用域之前被释放。但像 <code>Vec&lt;&amp;&#39;a i32&gt;</code> 这样的类型有一个必须被 <code>&#39;a</code> 包裹的生命周期：它必须在其引用对象仍然存活时被释放</p>
+<h2><span id="不同的生命周期参数">不同的生命周期参数</span></h2><p>假设您定义了一个包含两个引用的结构，如下所示：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> <span class="title class_">S</span>&lt;<span class="symbol">&#x27;a</span>&gt; &#123;</span><br><span class="line">    x: &amp;<span class="symbol">&#x27;a</span> <span class="type">i32</span>,</span><br><span class="line">    y: &amp;<span class="symbol">&#x27;a</span> <span class="type">i32</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>两个引用都使用相同的生命周期<code>&#39;a</code>。如果您的代码想要执行类似下面的操作，这可能会成为一个问题：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> <span class="variable">x</span> = <span class="number">10</span>;</span><br><span class="line"><span class="keyword">let</span> <span class="variable">r</span>;</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">y</span> = <span class="number">20</span>;</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">let</span> <span class="variable">s</span> = S &#123; x: &amp;x, y: &amp;y &#125;;</span><br><span class="line">        r = s.x;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="built_in">println!</span>(<span class="string">&quot;&#123;&#125;&quot;</span>, r);</span><br></pre></td></tr></table></figure>
+<p>这段代码不会创建任何悬空指针。对于 <code>y</code> 的引用保留在 <code>s</code> 中，在 <code>y</code> 之前就超出了作用域。对于 <code>x</code> 的引用最终存储在 <code>r</code> 中，它的生命周期不会超过 <code>x</code> 的生命周期</p>
+<p>然而，如果您尝试编译这段代码，Rust 会抱怨 <code>y</code> 的生命周期不够长，尽管显然是正确的。为什么 Rust 会担心呢？如果您仔细分析代码，可以理解其推理过程:</p>
+<ul>
+<li>S 的两个字段都是使用相同的生命周期 <code>&#39;a</code> 的引用，因此 Rust 必须找到一个适用于 <code>s.x</code> 和 <code>s.y</code> 的单一生命周期</li>
+<li>我们将 <code>r = s.x</code>，需要 <code>&#39;a</code> 包含 <code>r</code> 的生命周期</li>
+<li>我们使用 <code>&amp;y</code> 初始化了 <code>s.y</code>，要求 <code>&#39;a</code> 的生命周期不得超过 <code>y</code> 的生命周期。</li>
+</ul>
+<p>这些约束是无法满足的：没有生命周期既短于 y 的作用域又长于 r 的生命周期。Rust 因此报错</p>
+<p>问题出现在 <code>S</code> 中的两个引用具有相同的生命周期 <code>&#39;a</code>。将 <code>S</code> 的定义更改为让每个引用具有不同的生命周期将修复所有问题：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> <span class="title class_">S</span>&lt;<span class="symbol">&#x27;a</span>, <span class="symbol">&#x27;b</span>&gt; &#123;</span><br><span class="line">    x: &amp;<span class="symbol">&#x27;a</span> <span class="type">i32</span>,</span><br><span class="line">    y: &amp;<span class="symbol">&#x27;b</span> <span class="type">i32</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>使用这个定义，<code>s.x</code> 和 <code>s.y</code> 具有独立的生命周期。对于 <code>s.x</code> 的操作不会对存储在 <code>s.y</code> 中的内容产生影响，因此现在很容易满足约束条件：<code>&#39;a</code> 可以简单地是 <code>r</code> 的生命周期，<code>&#39;b</code> 可以是 <code>s</code> 的生命周期。（<code>y</code> 的生命周期也可以作为 <code>&#39;b</code>，但 Rust 尝试选择最小的能满足要求的生命周期。）一切都进行得很好</p>
+<p>函数签名也可以产生类似的效果。假设我们有一个这样的函数：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">f</span>&lt;<span class="symbol">&#x27;a</span>&gt;(r: &amp;<span class="symbol">&#x27;a</span> <span class="type">i32</span>, s: &amp;<span class="symbol">&#x27;a</span> <span class="type">i32</span>) <span class="punctuation">-&gt;</span> &amp;<span class="symbol">&#x27;a</span> <span class="type">i32</span> &#123;</span><br><span class="line">    r   <span class="comment">// 也许太严格</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在这里，两个引用参数使用相同的生命周期 <code>&#39;a</code>，这可能会不必要地限制调用者，就像我们之前展示的那样。如果这是一个问题，您可以让参数的生命周期独立变化：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">f</span>&lt;<span class="symbol">&#x27;a</span>, <span class="symbol">&#x27;b</span>&gt;(r: &amp;<span class="symbol">&#x27;a</span> <span class="type">i32</span>, s: &amp;<span class="symbol">&#x27;b</span> <span class="type">i32</span>) <span class="punctuation">-&gt;</span> &amp;<span class="symbol">&#x27;a</span> <span class="type">i32</span> &#123;</span><br><span class="line">    r   <span class="comment">// 宽松许多</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这样做的缺点是，添加生命周期可能会使类型和函数签名变得更难阅读。您的作者倾向于首先尝试最简单的定义，然后放宽限制，直到代码编译通过。由于 Rust 不会允许不安全的代码运行，因此只需等待出现问题时再进行调整是一种完全可接受的策略</p>
+<h2><span id="省略生命周期参数">省略生命周期参数</span></h2><p>Rust中有许多返回引用或将其作为参数的函数，但通常我们无需明确指出每个生命周期是什么。生命周期是存在的；当很明显可以确定应该使用哪些生命周期时，Rust 允许我们省略它们</p>
+<p>在最简单的情况下，您可能永远不需要为参数编写生命周期。Rust只会为每个需要生命周期的位置分配一个不同的生命周期。例如：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> <span class="title class_">S</span>&lt;<span class="symbol">&#x27;a</span>, <span class="symbol">&#x27;b</span>&gt; &#123;</span><br><span class="line">    x: &amp;<span class="symbol">&#x27;a</span> <span class="type">i32</span>,</span><br><span class="line">    y: &amp;<span class="symbol">&#x27;b</span> <span class="type">i32</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">sum_r_xy</span>(r: &amp;<span class="type">i32</span>, s: S) <span class="punctuation">-&gt;</span> <span class="type">i32</span> &#123;</span><br><span class="line">    r + s.x + s.y</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这个函数的签名是以下形式的简写：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">sum_r_xy</span>&lt;<span class="symbol">&#x27;a</span>, <span class="symbol">&#x27;b</span>, <span class="symbol">&#x27;c</span>&gt;(r: &amp;<span class="symbol">&#x27;a</span> <span class="type">i32</span>, s: S&lt;<span class="symbol">&#x27;b</span>, <span class="symbol">&#x27;c</span>&gt;) <span class="punctuation">-&gt;</span> <span class="type">i32</span></span><br></pre></td></tr></table></figure>
+<p>如果您返回引用或其他带有生命周期参数的类型，Rust 仍然会尝试使明确的情况变得简单。如果在您的函数参数中只出现一个生命周期，那么 Rust 假定返回值中的任何生命周期必须是这个生命周期：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">first_third</span>(point: &amp;[<span class="type">i32</span>; <span class="number">3</span>]) <span class="punctuation">-&gt;</span> (&amp;<span class="type">i32</span>, &amp;<span class="type">i32</span>) &#123;</span><br><span class="line">    (&amp;point[<span class="number">0</span>], &amp;point[<span class="number">2</span>])</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如果将所有生命周期都写出来，等价的函数签名应该是：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">first_third</span>&lt;<span class="symbol">&#x27;a</span>&gt;(point: &amp;<span class="symbol">&#x27;a</span> [<span class="type">i32</span>; <span class="number">3</span>]) <span class="punctuation">-&gt;</span> (&amp;<span class="symbol">&#x27;a</span> <span class="type">i32</span>, &amp;<span class="symbol">&#x27;a</span> <span class="type">i32</span>)</span><br></pre></td></tr></table></figure>
+<p>如果在您的参数中存在多个生命周期，则没有自然的理由来优先选择一个用于返回值，Rust 会要求您明确指出发生了什么情况</p>
+<p>如果您的函数是某种类型的方法，并通过引用获取其<code>self</code>参数，那么这将打破僵局：Rust 假设<code>self</code>的生命周期适用于返回值中的所有内容。（<code>self</code> 参数指的是方法被调用的值，在 Rust 中类似于 C++、Java 或 JavaScript 中的 <code>this</code>，或者 Python 中的 <code>self</code>。我们将在“使用 <code>impl</code> 定义方法”中介绍方法。）</p>
+<p>例如，您可以编写以下内容：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> <span class="title class_">StringTable</span> &#123;</span><br><span class="line">    elements: <span class="type">Vec</span>&lt;<span class="type">String</span>&gt;,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span> <span class="title class_">StringTable</span> &#123;</span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">find_by_prefix</span>(&amp;<span class="keyword">self</span>, prefix: &amp;<span class="type">str</span>) <span class="punctuation">-&gt;</span> <span class="type">Option</span>&lt;&amp;<span class="type">String</span>&gt; &#123;</span><br><span class="line">        <span class="keyword">for</span> <span class="variable">i</span> <span class="keyword">in</span> <span class="number">0</span>..<span class="keyword">self</span>.elements.<span class="title function_ invoke__">len</span>() &#123;</span><br><span class="line">            <span class="keyword">if</span> <span class="keyword">self</span>.elements[i].<span class="title function_ invoke__">start_with</span>(prefix) &#123;</span><br><span class="line">                <span class="keyword">return</span> <span class="title function_ invoke__">Some</span>(&amp;<span class="keyword">self</span>.elements[i]);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="literal">None</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>find_by_prefix</code> 方法的签名是以下形式的简写：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">find_by_prefix</span>&lt;<span class="symbol">&#x27;a</span>, <span class="symbol">&#x27;b</span>&gt;(&amp;<span class="symbol">&#x27;a</span> <span class="keyword">self</span>, prefix: &amp;<span class="symbol">&#x27;b</span> <span class="type">str</span>) <span class="punctuation">-&gt;</span> <span class="type">Option</span>&lt;&amp;<span class="symbol">&#x27;a</span> <span class="type">String</span>&gt;</span><br></pre></td></tr></table></figure>
+<p>Rust 假设您借用的内容都是从 <code>self</code> 借用而来的</p>
+<p>再次强调，这些只是缩写形式，旨在提供帮助而不引入意外情况。当它们不符合您的需求时，您总是可以明确地写出生命周期</p>
+
+        
+      </div>
+
+         
+    </div>
+    
+     
+  </div>
+  
+    
+<nav id="article-nav">
+  <a class="article-nav-btn left  disabled "
+     >
+    <i class="fa-solid fa-angle-left"></i>
+    <p class="title-text">
+        
+    </p>
+  </a>
+  <a class="article-nav-btn right "
+    
+      href="/2023/12/11/vscode%E9%85%8D%E7%BD%AEC++%E7%8E%AF%E5%A2%83/"
+      title="VSCode配置C++环境(小白)"
+     >
+
+    <p class="title-text">
+      
+        VSCode配置C++环境(小白)
+        
+    </p>
+    <i class="fa-solid fa-angle-right"></i>
+  </a>
+</nav>
+
+
+  
+</article>
+
+
+
+
+    </div>
+    <div id="footer-wrapper">
+      <footer id="footer">
+  
+  <div id="footer-info" class="inner">
+    
+    &copy; 2024 threeWater<br>
+    Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> & Theme <a target="_blank" rel="noopener" href="https://github.com/saicaca/hexo-theme-vivia">Vivia</a>
+  </div>
+</footer>
+
+    </div>
+    <div class="back-to-top-wrapper">
+    <button id="back-to-top-btn" class="back-to-top-btn hide" onclick="topFunction()">
+        <i class="fa-solid fa-angle-up"></i>
+    </button>
+</div>
+
+<script>
+    function topFunction() {
+        window.scroll({ top: 0, behavior: 'smooth' });
+    }
+    let btn = document.getElementById('back-to-top-btn');
+    function scrollFunction() {
+        if (document.body.scrollTop > 600 || document.documentElement.scrollTop > 600) {
+            btn.classList.remove('hide')
+        } else {
+            btn.classList.add('hide')
+        }
+    }
+    window.onscroll = function() {
+        scrollFunction();
+    }
+</script>
+
+  </div>
+  <script src="/js/light-dark-switch.js"></script>
+</body>
+</html>
