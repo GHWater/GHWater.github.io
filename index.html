@@ -176,11 +176,6 @@
                 <div class="category-count">2</div>
             </a>
         
-            <a class="category-link" href="/categories/Rust/">
-                Rust
-                <div class="category-count">1</div>
-            </a>
-        
             <a class="category-link" href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">
                 设计模式
                 <div class="category-count">1</div>
@@ -195,7 +190,12 @@
                 C/C++
                 <div class="category-count">1</div>
             </a>
-        </div></div></div>
+        </div></div>
+            <a class="category-link" href="/categories/Rust/">
+                Rust
+                <div class="category-count">1</div>
+            </a>
+        </div>
     </div>
   </div>
 
@@ -343,7 +343,8 @@
 Rust的引用看起来与C或C++中的普通指针非常相似。但是这些指针是不安全的；Rust是如何控制其引用的呢？也许最好的方法是尝试违反这些规则，以便看到它们是如何起作用的
 为了传达基本思想，我们将从最简单的情况开始，展示Rust如何确保在单个函数体内正确使用引用。然后，我们将研究在函数之间传递引用和将其存储在数据结构中。这涉及到为这些函数和数据类型提供生命周期参数，我们将对此进行解释。最后，我们将介绍一些Rust提供的简化常见使用模式的快捷方式。在整个过程中，我们将展示Rust如何指出错误的代码，并经常提出解决方案的建议
 借用局部变量这是一个非常明显的情况。你不能借用对局部变量的引用并将其带出变量的作用域：
-&#123;.line-numbers&#125;12345678fn main() &#123;    let r;    &#123;        let x = 1;        r = &amp;x;    &#125;    assert_...
+12345678fn main() &#123;    let r;    &#123;        let x = 1;        r = &amp;x;    &#125;    assert_eq!(*r, 1);&#125;
+Rust编译器...
             
           </div>
         
