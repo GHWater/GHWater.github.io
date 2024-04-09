@@ -176,14 +176,14 @@
                 <div class="category-count">1</div>
             </a>
         
-            <a class="category-link" href="/categories/Rust/">
-                Rust
-                <div class="category-count">1</div>
-            </a>
-        
             <a class="category-link" href="/categories/C/">
                 C++
                 <div class="category-count">2</div>
+            </a>
+        
+            <a class="category-link" href="/categories/Rust/">
+                Rust
+                <div class="category-count">1</div>
             </a>
         
             <a class="category-link" href="/categories/Go/">
@@ -200,7 +200,12 @@
                 C/C++
                 <div class="category-count">1</div>
             </a>
-        </div></div></div>
+        </div></div>
+            <a class="category-link" href="/categories/%E6%B5%8F%E8%A7%88%E5%99%A8/">
+                浏览器
+                <div class="category-count">1</div>
+            </a>
+        </div>
     </div>
   </div>
 
@@ -210,7 +215,7 @@
   <div class="widget-wrap">
     <div class="widget">
       <h3 class="widget-title">标签</h3>
-      <ul class="widget-tag-list" itemprop="keywords"><li class="widget-tag-list-item"><a class="widget-tag-list-link" href="/tags/for%E5%BE%AA%E7%8E%AF/" rel="tag">for循环</a></li><li class="widget-tag-list-item"><a class="widget-tag-list-link" href="/tags/%E5%85%A5%E9%97%A8/" rel="tag">入门</a></li><li class="widget-tag-list-item"><a class="widget-tag-list-link" href="/tags/%E5%BC%95%E7%94%A8/" rel="tag">引用</a></li><li class="widget-tag-list-item"><a class="widget-tag-list-link" href="/tags/%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE/" rel="tag">环境配置</a></li><li class="widget-tag-list-item"><a class="widget-tag-list-link" href="/tags/%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/" rel="tag">生命周期</a></li><li class="widget-tag-list-item"><a class="widget-tag-list-link" href="/tags/%E8%BF%90%E7%AE%97%E7%AC%A6%E9%87%8D%E8%BD%BD/" rel="tag">运算符重载</a></li></ul>
+      <ul class="widget-tag-list" itemprop="keywords"><li class="widget-tag-list-item"><a class="widget-tag-list-link" href="/tags/for%E5%BE%AA%E7%8E%AF/" rel="tag">for循环</a></li><li class="widget-tag-list-item"><a class="widget-tag-list-link" href="/tags/%E4%BA%8B%E4%BB%B6%E5%BE%AA%E7%8E%AF/" rel="tag">事件循环</a></li><li class="widget-tag-list-item"><a class="widget-tag-list-link" href="/tags/%E5%85%A5%E9%97%A8/" rel="tag">入门</a></li><li class="widget-tag-list-item"><a class="widget-tag-list-link" href="/tags/%E5%BC%95%E7%94%A8/" rel="tag">引用</a></li><li class="widget-tag-list-item"><a class="widget-tag-list-link" href="/tags/%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE/" rel="tag">环境配置</a></li><li class="widget-tag-list-item"><a class="widget-tag-list-link" href="/tags/%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/" rel="tag">生命周期</a></li><li class="widget-tag-list-item"><a class="widget-tag-list-link" href="/tags/%E8%BF%90%E7%AE%97%E7%AC%A6%E9%87%8D%E8%BD%BD/" rel="tag">运算符重载</a></li><li class="widget-tag-list-item"><a class="widget-tag-list-link" href="/tags/%E8%BF%9B%E7%A8%8B%E6%A8%A1%E5%9E%8B/" rel="tag">进程模型</a></li></ul>
     </div>
   </div>
 
@@ -325,22 +330,62 @@
           <div class="need-seperator meta-info">
             <div class="meta-cate-flex">
   
-    未分类 
+  <a class="meta-cate-link" href="/categories/%E6%B5%8F%E8%A7%88%E5%99%A8/">浏览器</a>
    
 </div>
   
           </div>
           <div class="wordcount need-seperator meta-info">
-            0 词 
+            3.5k 词 
           </div>
         </div>
         
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E4%BA%8B%E4%BB%B6%E5%BE%AA%E7%8E%AF/" rel="tag">事件循环</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E8%BF%9B%E7%A8%8B%E6%A8%A1%E5%9E%8B/" rel="tag">进程模型</a></li></ul>
+
       </header>
       <div class="e-content article-entry" itemprop="articleBody">
         
           <div class="truncate-text">
             
               
+
+
+浏览器的进程模型
+何为进程？
+何为线程？
+浏览器有哪些进程和线程？
+渲染主线程是如何工作的？
+
+
+若干解释
+何为异步？
+JS为何会阻碍渲染？
+任务有优先级吗？
+
+
+
+
+
+浏览器的进程模型何为进程？程序运行需要有它自己专属的内存空间，可以把这块内存空间简单的立即为进程
+每个应用至少有一个进程。进程之间相互独立，即使要通信，也需要双方同意
+何为线程？有了进程后，就可以运行程序的代码了
+运行代码的【人】称之为【线程】
+一个进程至少有一个线程，所以在进程开启后会自动创建一个线程来运行代码，该线程称之为主线程，如果主线程结束，则整个程序结束
+如果程序需要同时执行多块代码，主线程就会启动更多的线程来执行代码，所以一个进程中可以包含多个线程
+浏览器有哪些进程和线程？浏览器是一个多进程多线程的应用程序
+浏览器内部工作极其复杂
+为了避免相互影响，为了减少连环崩溃的几率，当启动浏览器后，它会自动启动多个进程
+
+可以在浏览器的任务管理器中查看当前的所有进程
+
+其中，最主要的进程有：
+
+浏览器进程
+
+主要负责页面显示、用户交互、子进程管理等。浏览器进程内部会启动多个线程处理不同的任务
+
+
+网络进程...
             
           </div>
         
