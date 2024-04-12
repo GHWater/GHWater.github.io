@@ -30,22 +30,23 @@
 
 
   
-  <title>about | Code</title>
+  <title>浏览器渲染原理 | Code</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
   <link rel="preload" href="/css/fonts/Roboto-Regular.ttf" as="font" type="font/ttf" crossorigin="anonymous">
   <link rel="preload" href="/css/fonts/Roboto-Bold.ttf" as="font" type="font/ttf" crossorigin="anonymous">
 
-  <meta name="description" content="This is a beginner&#39;s website for learning code">
-<meta property="og:type" content="website">
-<meta property="og:title" content="about">
-<meta property="og:url" content="http://example.com/about/index.html">
+  <meta name="description" content="渲染的原理 渲染时间点 渲染流水线 一、解析HTML —— Parse HTML HTML解析过程中遇到CSS代码怎么办？   HTML解析过程中遇到JS代码怎么办？ 二、样式计算 —— Recalculate Style 三、布局 —— Layout DOM树和Layout树不一定是一一对应的   四、分层 —— Layer 五、绘制 —— Paint 六、分块 —— Tilling 七、">
+<meta property="og:type" content="article">
+<meta property="og:title" content="浏览器渲染原理">
+<meta property="og:url" content="http://example.com/2024/04/09/%E6%B5%8F%E8%A7%88%E5%99%A8%E6%B8%B2%E6%9F%93%E5%8E%9F%E7%90%86/index.html">
 <meta property="og:site_name" content="Code">
-<meta property="og:description" content="This is a beginner&#39;s website for learning code">
+<meta property="og:description" content="渲染的原理 渲染时间点 渲染流水线 一、解析HTML —— Parse HTML HTML解析过程中遇到CSS代码怎么办？   HTML解析过程中遇到JS代码怎么办？ 二、样式计算 —— Recalculate Style 三、布局 —— Layout DOM树和Layout树不一定是一一对应的   四、分层 —— Layer 五、绘制 —— Paint 六、分块 —— Tilling 七、">
 <meta property="og:locale" content="zh_CN">
-<meta property="article:published_time" content="2023-11-17T06:17:55.000Z">
-<meta property="article:modified_time" content="2023-11-17T06:17:55.592Z">
+<meta property="article:published_time" content="2024-04-09T11:05:02.000Z">
+<meta property="article:modified_time" content="2024-04-12T13:20:55.152Z">
 <meta property="article:author" content="John Doe">
+<meta property="article:tag" content="渲染原理">
 <meta name="twitter:card" content="summary">
   
     <link rel="alternate" href="/atom.xml" title="Code" type="application/atom+xml">
@@ -302,7 +303,9 @@
        
 
 
-<article id="page-" class="h-entry article article-type-page" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+<article id="post-浏览器渲染原理" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  
+    
    
   <div class="article-inner">
     <div class="article-main">
@@ -313,7 +316,7 @@
   
     
       <h1 class="p-name article-title" itemprop="headline name">
-        about
+        浏览器渲染原理
       </h1>
     
   
@@ -321,25 +324,106 @@
 
         <div class='meta-info-bar'>
           <div class="meta-info">
-  <time class="dt-published" datetime="2023-11-17T06:17:55.000Z" itemprop="datePublished">2023-11-17</time>
+  <time class="dt-published" datetime="2024-04-09T11:05:02.000Z" itemprop="datePublished">2024-04-09</time>
 </div>
           <div class="need-seperator meta-info">
             <div class="meta-cate-flex">
   
-    未分类 
+  <a class="meta-cate-link" href="/categories/%E6%B5%8F%E8%A7%88%E5%99%A8/">浏览器</a>
    
 </div>
   
           </div>
           <div class="wordcount need-seperator meta-info">
-            0 词 
+            4k 词 
           </div>
         </div>
         
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E6%B8%B2%E6%9F%93%E5%8E%9F%E7%90%86/" rel="tag">渲染原理</a></li></ul>
+
       </header>
       <div class="e-content article-entry" itemprop="articleBody">
         
-          
+          <!-- toc -->
+
+<ul>
+<li><a href="#%E6%B8%B2%E6%9F%93%E7%9A%84%E5%8E%9F%E7%90%86">渲染的原理</a><ul>
+<li><a href="#%E6%B8%B2%E6%9F%93%E6%97%B6%E9%97%B4%E7%82%B9">渲染时间点</a></li>
+<li><a href="#%E6%B8%B2%E6%9F%93%E6%B5%81%E6%B0%B4%E7%BA%BF">渲染流水线</a><ul>
+<li><a href="#%E4%B8%80-%E8%A7%A3%E6%9E%90html-parse-html">一、解析HTML —— Parse HTML</a><ul>
+<li><a href="#html%E8%A7%A3%E6%9E%90%E8%BF%87%E7%A8%8B%E4%B8%AD%E9%81%87%E5%88%B0css%E4%BB%A3%E7%A0%81%E6%80%8E%E4%B9%88%E5%8A%9E">HTML解析过程中遇到CSS代码怎么办？</a></li>
+</ul>
+</li>
+<li><a href="#html%E8%A7%A3%E6%9E%90%E8%BF%87%E7%A8%8B%E4%B8%AD%E9%81%87%E5%88%B0js%E4%BB%A3%E7%A0%81%E6%80%8E%E4%B9%88%E5%8A%9E">HTML解析过程中遇到JS代码怎么办？</a></li>
+<li><a href="#%E4%BA%8C-%E6%A0%B7%E5%BC%8F%E8%AE%A1%E7%AE%97-recalculate-style">二、样式计算 —— Recalculate Style</a></li>
+<li><a href="#%E4%B8%89-%E5%B8%83%E5%B1%80-layout">三、布局 —— Layout</a><ul>
+<li><a href="#dom%E6%A0%91%E5%92%8Clayout%E6%A0%91%E4%B8%8D%E4%B8%80%E5%AE%9A%E6%98%AF%E4%B8%80%E4%B8%80%E5%AF%B9%E5%BA%94%E7%9A%84">DOM树和Layout树不一定是一一对应的</a></li>
+</ul>
+</li>
+<li><a href="#%E5%9B%9B-%E5%88%86%E5%B1%82-layer">四、分层 —— Layer</a></li>
+<li><a href="#%E4%BA%94-%E7%BB%98%E5%88%B6-paint">五、绘制 —— Paint</a></li>
+<li><a href="#%E5%85%AD-%E5%88%86%E5%9D%97-tilling">六、分块 —— Tilling</a></li>
+<li><a href="#%E4%B8%83-%E5%85%89%E6%A0%85%E5%8C%96-raster">七、光栅化 —— Raster</a></li>
+<li><a href="#%E5%85%AB-%E7%94%BB-draw">八、画 —— Draw</a><ul>
+<li><a href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E5%90%88%E6%88%90%E7%BA%BF%E7%A8%8B%E4%B8%8D%E7%9B%B4%E6%8E%A5%E4%BA%A4%E7%BB%99%E7%A1%AC%E4%BB%B6%E6%98%BE%E5%8D%A1%E8%80%8C%E9%9C%80%E8%A6%81%E5%9C%A8gpu%E8%BF%9B%E7%A8%8B%E6%B5%8F%E8%A7%88%E5%99%A8%E7%9A%84%E8%BF%9B%E7%A8%8B%E5%86%85%E4%B8%AD%E8%BD%AC">为什么合成线程不直接交给硬件(显卡)而需要在GPU进程&lt;浏览器的进程&gt;内中转？</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#%E9%9D%A2%E8%AF%95%E9%A2%98">面试题</a><ul>
+<li><a href="#%E6%B5%8F%E8%A7%88%E5%99%A8%E6%98%AF%E5%A6%82%E4%BD%95%E6%B8%B2%E6%9F%93%E9%A1%B5%E9%9D%A2%E7%9A%84">浏览器是如何渲染页面的？</a></li>
+<li><a href="#%E4%BB%80%E4%B9%88%E6%98%AFreflow">什么是<code>reflow</code>？</a></li>
+<li><a href="#%E4%BB%80%E4%B9%88%E6%98%AFrepaint">什么是<code>repaint</code>？</a></li>
+<li><a href="#%E4%B8%BA%E4%BB%80%E4%B9%88transform%E7%9A%84%E6%95%88%E7%8E%87%E9%AB%98">为什么<code>transform</code>的效率高？</a></li>
+</ul>
+</li>
+</ul>
+<!-- tocstop -->
+
+<h1><span id="渲染的原理">渲染的原理</span></h1><h2><span id="渲染时间点">渲染时间点</span></h2><p>网络线程 —–&gt; 通信(获取HTML) –(生成)–&gt; 渲染任务(在消息队列排队等待渲染主线程处理)</p>
+<p>渲染主线程 —–&gt; 渲染流程</p>
+<h2><span id="渲染流水线">渲染流水线</span></h2><p>HTML字符串经过：<br>解析HTML　—&gt; 样式计算 —&gt; 布局 —&gt; 分块 —&gt; 绘制 —&gt; 分层 —&gt; 光栅化 —&gt; 画页面<br>八个步骤得到最终的像素信息</p>
+<h3><span id="一-解析html-parse-html">一、解析HTML —— Parse HTML</span></h3><p>HTML字符串　–parse HTML–&gt; DOM树 + CSSOM树</p>
+<h4><span id="html解析过程中遇到css代码怎么办">HTML解析过程中遇到CSS代码怎么办？</span></h4><p>为了提高解析效率，浏览器会启动一个预解析线程率先下载和解析CSS</p>
+<h3><span id="html解析过程中遇到js代码怎么办">HTML解析过程中遇到JS代码怎么办？</span></h3><p>渲染主线程遇到JS时必须暂停一切行为，等待下载执行完后把代码放到渲染主线程，启动V8引擎去运行JS，运行完后才能继续解析HTML<br>(JS代码里又可能会改动当前的DOM树，DOM树不是解析完才会生成，而是一边解析HTML一边生成DOM树)<br>预解析线程和网络线程可以分担一点下载JS的任务</p>
+<h3><span id="二-样式计算-recalculate-style">二、样式计算 —— Recalculate Style</span></h3><p>将DOM树 + CSSOM树两者结合一下，需要明确DOM树里的每一个节点它到底是受CSSOM树里哪些样式的影响，它最终的样式应该又是什么，最后得到的就是计算后的样式(Computed Style)，计算后的样式就是最终样式，即所有的CSS属性必须全部都有值<br>样式计算过后还是那棵DOM树，不过现在DOM树上的每一个节点都有一个最终样式<br>(CSS的两个重要知识点之一CSS属性值的计算过程&lt;层叠、继承&gt;就发生在这一步；另一个重要知识点是视觉格式化模型&lt;盒模型、包含块、浮动布局、BFC…&gt;)</p>
+<h3><span id="三-布局-layout">三、布局 —— Layout</span></h3><p>上一步生成了存在最终样式的DOM树，根据它的样式来算出每个节点的尺寸和位置，最终生成一棵布局树<br>(尺寸包括宽度、高度等；位置指的是相对于包含块&lt;简单来说就是一个元素的活动区域&gt;的位置)</p>
+<h4><span id="dom树和layout树不一定是一一对应的">DOM树和Layout树不一定是一一对应的</span></h4><p>布局树是要能够找到DOM树每个节点的几何信息(尺寸和位置)，有些隐藏的节点比如<code>display:none</code>并没有几何信息，并不会生成对应的布局树；还有一些伪元素比如<code>::befor</code>，在DOM树里面不存在但是在布局树里面存在  </p>
+<ol>
+<li><strong>内容必须在行盒中</strong></li>
+<li><strong>行盒和块盒不能相邻</strong></li>
+</ol>
+<h3><span id="四-分层-layer">四、分层 —— Layer</span></h3><p>布局树里有各种节点的几何信息(宽高、尺寸以及位置等)，为了提高效率有了分层<br>与堆叠&lt;<code>z-index</code>、<code>opacity</code>、<code>transform</code>等&gt;上下文有关的属性会影响到分层结果，会影响到分层的决策，并不是会直接形成分层的结果</p>
+<h3><span id="五-绘制-paint">五、绘制 —— Paint</span></h3><p>生成绘制的指令，<code>canvas</code>可以直接绘制就是浏览器开放出来的一些功能，每一层级都有单独的绘制指令</p>
+<blockquote>
+<p>注意：渲染主线程的工作到此为止，剩余步骤交给其它线程完成<br>渲染主线程 –&gt; parse –&gt; style –&gt; layout –&gt; layer –&gt; paint –&gt; 后续工作交给其它线程</p>
+</blockquote>
+<h3><span id="六-分块-tilling">六、分块 —— Tilling</span></h3><p>分块会将每一层分为多个小的区域<br>分块的工作是交给多个线程同时进行的<br>渲染进程里有一个合成线程可以专门用来做分块，合成线程会启动更多的线程去分块，最终会得到分块信息</p>
+<h3><span id="七-光栅化-raster">七、光栅化 —— Raster</span></h3><p>光栅化是将每个块变成位图&lt;每个像素点信息&gt;<br>优先处理靠近视口的块<br>此过程会用到GPU加速</p>
+<blockquote>
+<p>合成线程 –&gt; Tiles –&gt; Raster –GPU负责光栅化–&gt; 位图</p>
+</blockquote>
+<h3><span id="八-画-draw">八、画 —— Draw</span></h3><p>合成线程计算出每个位图在屏幕上的位置，交给GPU进行最终呈现<br><code>transform</code>变形，比如放大缩小都发生在这一步，主要是矩阵变换</p>
+<blockquote>
+<p>合成线程 –&gt; Tiles –&gt; Raster –&gt; Draw –交给GPU进程(quad指引)<br>GPU进程再交给真实的硬件(显卡)，最终显卡将像素信息按照位置呈现出来</p>
+</blockquote>
+<h4><span id="为什么合成线程不直接交给硬件显卡而需要在gpu进程lt浏览器的进程gt内中转">为什么合成线程不直接交给硬件(显卡)而需要在GPU进程&lt;浏览器的进程&gt;内中转？</span></h4><p>合成线程和渲染主线程都在渲染进程里面，而渲染进程是在一个沙盒&lt;为了安全考虑&gt;里，沙盒隔离了硬件，所以找不到GPU硬件<br>查找GPU的过程称之为系统调用，也就是调用操作系统的接口，而渲染进程没有这个能力的，所以必须中转给GPU进程，而GPU进程并不在沙盒里</p>
+<h1><span id="面试题">面试题</span></h1><h2><span id="浏览器是如何渲染页面的">浏览器是如何渲染页面的？</span></h2><p>当浏览器的网络线程收到HTML文档后，会产生一个渲染任务，并将其传递给渲染主线程的消息队列　　<br>在事件循环机制的作用下，渲染主线程取出消息队列中的渲染任务，开启后续的渲染流程</p>
+<p>整个渲染流程分为多个阶段，分别是：HTML解析、样式计算、布局、分层、绘制、分块、光栅化、画页面<br>每个阶段都有明确的输入输出，上一个阶段的输出会成为下一个阶段的输入<br>这样，整个渲染流程就形成了一套组织严密的生产流水线</p>
+<p>渲染的第一步是解析HTML<br>解析过程中遇到CSS解析CSS，遇到JS解析JS。为了提高解析效率，浏览器在开始解析前，会启动一个预解析的线程，率先下载HTML中的外部CSS文件和外部的JS文件<br>如果主线程解析到link位置，此时外部的CSS文件还没有下载解析好，主线程不会等待，继续解析后续的HTML。这是因为下载和解析CSS的工作是在网络线程和预解析线程中进行的。这就是CSS不会阻塞HTML解析的根本原因　　<br>如果主线程解析到试script位置，会停止解析HTML，转而等待JS文件下载好，并将全局代码解析执行完成后，才能继续解析HTML。这是因为JS代码的执行过程可能会修改当前的DOM树，所以DOM树的生成必须暂停。这就是JS会阻塞HTML解析的根本原因　　<br>第一步完成后，会得到DOM树和CSSOM树，浏览器的默认样式、内部样式、外部样式、行内样式均会包含在CSSOM树中</p>
+<p>渲染的下一步是样式计算<br>渲染主线程会遍历前面得到的DOM树，依次为树中的每个节点计算出它最终的样式，称之为Computed Style<br>在这一过程中，很多预设值会变成绝对值，比如<code>red</code>会变成<code>rgb(255, 0, 0)</code>，相对单位会变成绝对单位，比如<code>em</code>会变成<code>px</code><br>这一步完成后，会得到一棵带有最终样式的DOM树</p>
+<p>接下来是布局，布局完成后会得到布局树<br>布局阶段会依次遍历DOM树的每一个节点，计算每个节点的几何信息，例如节点的宽高、相对包含块的位置等<br>大部分时候，DOM树和布局树并非一一对应<br>比如<code>display:none</code>的节点没有几何信息，因此不会生成布局树；又比如使用了伪元素选择器，虽然DOM树中不存在这些伪元素节点，但它们拥有几何信息，所以会生成到布局树中；还有匿名行盒、匿名块盒等等都会导致DOM树和布局树无法一一对应</p>
+<p>下一步是分层<br>渲染主线程会使用一套复杂的策略对整个布局树中进行分层<br>分层的好处在于，将来某一层改变后，仅会对该层进行后续处理，从而提升效率<br>滚动条、堆叠上下文、transform、opacity等样式都会或多或少地影响分层结果，也可以通过<code>will-change</code>属性更大程度地影响分层结果，注意不要滥用此属性</p>
+<p>再下一步是绘制<br>渲染主线程会为每个层单独绘制指令集，用于描述这一层的内容该如何画出来<br>完成绘制后，渲染主线程将每个图层的绘制信息提交给合成线程，剩余工作将由合成线程完成</p>
+<p>合成线程首先对每个图层进行分块，将其划分为更多的小区域<br>它会从线程池中拿取多个线程来完成分块工作</p>
+<p>分块完成后，进入光栅化阶段<br>合成线程会将信息交给GPU进程，以极高的速度完成光栅化　　<br>GPU进程会开启多个线程来完成光栅化，并且优先处理靠近视口区域的块<br>光栅化的结果，就是一块一块的位图</p>
+<p>最后一个阶段就是画了<br>合成线程拿到每个层、每个块的位图后，生成一个个【指引(quad)】信息<br>指引会标识出每个位图应该画到屏幕的哪个位置，以及会考虑到旋转、缩放等变形<br>变形发生在合成线程，与渲染主线程无关，这就是<code>transform</code>效率高的本质原因<br>合成线程会把quad提交给GPU进程，由GPU进程产生系统调用，提交给GPU硬件，完成最终的屏幕成像</p>
+<h2><span id="什么是reflow">什么是<code>reflow</code>？</span></h2><p>reflow的本质就是重新计算layout树<br>当进行了会影响布局树的操作后，需要重新计算布局树，会引发layout<br>为了避免连续的多次操作导致布局树反复计算，浏览器会合并这些操作，当JS代码全部完成后再进行统一计算。所以，改动属性造成的reflow是异步完成的<br>也同样因为如此，当JS获取布局属性时，就可以造成无法获取到最新的布局信息<br>浏览器在反复权衡下，最终决定获取几何信息的属性立即reflow</p>
+<h2><span id="什么是repaint">什么是<code>repaint</code>？</span></h2><p>repaint的本质就是重新根据分层信息计算了绘制指令<br>当改动了可见样式后，就需要重新计算，会引发repaint<br>由于元素的布局信息也属于可见样式，所以reflow一定会引起repaint</p>
+<h2><span id="为什么transform的效率高">为什么<code>transform</code>的效率高？</span></h2><p>因为transform既不会影响布局也不会影响绘制指令，它影响的只是渲染流程的最后一个【draw】阶段<br>由于draw阶段在合成线程中，所以transform的变化几乎不会影响到主线程；反之，渲染主线程无论如何忙碌，也不会影响transform的变化</p>
+
         
       </div>
 
@@ -350,6 +434,29 @@
   </div>
   
     
+<nav id="article-nav">
+  <a class="article-nav-btn left  disabled "
+     >
+    <i class="fa-solid fa-angle-left"></i>
+    <p class="title-text">
+        
+    </p>
+  </a>
+  <a class="article-nav-btn right "
+    
+      href="/2024/04/08/%E4%BA%8B%E4%BB%B6%E5%BE%AA%E7%8E%AF/"
+      title="事件循环"
+     >
+
+    <p class="title-text">
+      
+        事件循环
+        
+    </p>
+    <i class="fa-solid fa-angle-right"></i>
+  </a>
+</nav>
+
 
   
 </article>
